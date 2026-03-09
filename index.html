@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop Odyssey - Get Internet Access</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Desktop Environment -->
+    <div id="desktop" class="desktop">
+        <!-- Desktop Icons -->
+        <div id="desktopIcons" class="desktop-icons">
+            <!-- Icons will be rendered here -->
+        </div>
+
+        <!-- Windows Container -->
+        <div id="windowsContainer" class="windows-container">
+            <!-- Windows will be rendered here -->
+        </div>
+
+        <!-- Taskbar -->
+        <div class="taskbar">
+            <div class="taskbar-start">
+                <div class="start-button">▣ Start</div>
+            </div>
+            <div class="taskbar-center">
+                <div id="openApps" class="open-apps">
+                    <!-- Open app buttons appear here -->
+                </div>
+            </div>
+            <div class="taskbar-end">
+                <div id="wifiIcon" class="taskbar-icon" title="Network">
+                    <span id="wifiStatus">📡</span>
+                </div>
+                <div id="clockIcon" class="taskbar-icon clock-display" title="Time">
+                    <span id="taskbarClock">??:??</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container">
+        <!-- Toasts appear here -->
+    </div>
+
+    <!-- Win Screen -->
+    <div id="winScreen" class="win-screen hidden">
+        <div class="win-content">
+            <h1>🎉 INTERNET ACCESS ACHIEVED!</h1>
+            <p class="win-message">You have successfully navigated the absurd maze of desktop obstacles.</p>
+            <p class="win-flavor">You are now ready to browse exactly 3 websites before everything crashes again.</p>
+            <button id="restartBtn" class="win-restart-btn">Return to Desktop Prison</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
