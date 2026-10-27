@@ -1,0 +1,8 @@
+{
+	"forge":      { "name": "Forge",              "desc": "Better bellows: wider sweet spot when forging.",                   "start": 1, "costs": [150, 400, 900],  "renown": [5, 25, 60] },
+	"workbench":  { "name": "Workbench",          "desc": "Finer tools: wider sweet spot at the workbench.",                  "start": 1, "costs": [150, 400, 900],  "renown": [5, 25, 60] },
+	"jeweler":    { "name": "Jeweler's Bench",    "desc": "Level 1 unlocks jewelry. Higher levels widen the sweet spot.",     "start": 0, "costs": [200, 450, 950],  "renown": [8, 30, 65] },
+	"signboard":  { "name": "Shop Signboard",     "desc": "+1 adventurer visiting your shop each day.",                       "start": 0, "costs": [100, 300, 700],  "renown": [3, 20, 45] },
+	"contacts":   { "name": "Merchant Contacts",  "desc": "-10% price on materials from the supplier.",                       "start": 0, "costs": [180, 500],       "renown": [10, 40] },
+	"apprentice": { "name": "Apprentice",         "desc": "Crafts one Common copy of your last recipe each night (per level).", "start": 0, "costs": [300, 750],       "renown": [20, 50] }
+}

@@ -1,0 +1,12 @@
+{
+	"wood":          { "name": "Oak Plank",     "price": 3,  "buyable": true,  "color": "#8b5a2b" },
+	"leather":       { "name": "Leather",       "price": 5,  "buyable": true,  "color": "#a0522d" },
+	"iron_ingot":    { "name": "Iron Ingot",    "price": 8,  "buyable": true,  "color": "#8a8f99" },
+	"silver_ingot":  { "name": "Silver Ingot",  "price": 20, "buyable": true,  "color": "#d9dde3" },
+	"rough_gem":     { "name": "Rough Gem",     "price": 30, "buyable": true,  "color": "#4fb0c6" },
+	"monster_fang":  { "name": "Monster Fang",  "price": 12, "buyable": false, "color": "#efe6cf" },
+	"bone_dust":     { "name": "Bone Dust",     "price": 15, "buyable": false, "color": "#d8d2c4" },
+	"troll_hide":    { "name": "Troll Hide",    "price": 35, "buyable": false, "color": "#5e7a4a" },
+	"ember_crystal": { "name": "Ember Crystal", "price": 60, "buyable": false, "color": "#ff6a2b" },
+	"mithril_ore":   { "name": "Mithril Ore",   "price": 90, "buyable": false, "color": "#9fd8ff" }
+}

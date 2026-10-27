@@ -1,0 +1,36 @@
+; Engine configuration file.
+; Open this folder in Godot 4.3+ (Project Manager -> Import -> select this file).
+
+config_version=5
+
+[application]
+
+config/name="Forge & Fortune"
+config/description="Craft gear for adventurers, watch them conquer dungeons, become a legend."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+EventBus="*res://scripts/autoload/event_bus.gd"
+DataDB="*res://scripts/autoload/data_db.gd"
+GameState="*res://scripts/autoload/game_state.gd"
+TimeManager="*res://scripts/autoload/time_manager.gd"
+AdventurerManager="*res://scripts/autoload/adventurer_manager.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[layer_names]
+
+3d_physics/layer_1="world"
+3d_physics/layer_2="interactable"
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2

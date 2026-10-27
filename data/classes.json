@@ -1,0 +1,6 @@
+{
+	"warrior": { "name": "Warrior", "color": "#b5483b", "likes": ["heavy", "axe"] },
+	"ranger":  { "name": "Ranger",  "color": "#4c8a3f", "likes": ["bow", "light"] },
+	"mage":    { "name": "Mage",    "color": "#4f5fbf", "likes": ["staff", "magic"] },
+	"rogue":   { "name": "Rogue",   "color": "#6b4f86", "likes": ["blade", "luck"] }
+}
