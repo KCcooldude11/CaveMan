@@ -17,6 +17,7 @@ var classes: Dictionary = {}
 var dungeons: Array = []
 var upgrades: Dictionary = {}
 var renown_tiers: Array = []
+var dial: Dictionary = {}
 
 
 func _ready() -> void:
@@ -26,6 +27,7 @@ func _ready() -> void:
 	dungeons = _load("res://data/dungeons.json")
 	upgrades = _load("res://data/upgrades.json")
 	renown_tiers = _load("res://data/renown_tiers.json")
+	dial = _load("res://data/dial_minigame.json")
 
 
 func _load(path: String) -> Variant:

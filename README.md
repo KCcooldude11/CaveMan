@@ -29,13 +29,16 @@ Built with **[Godot 4.3+](https://godotengine.org/download)**, which is free, sm
 | Shift | Sprint |
 | Space | Jump |
 | **E** / left click | Interact (stations, counter, customers, bed) |
-| Space / E / click | Strike during the forging minigame |
+| Space / E / click | Strike during the crafting minigames |
 | Tab | Adventurer ledger |
 | Esc | Close menu / pause menu (save, new game, quit) |
 
 ### How to play
 1. **Craft**: walk to the Forge or Workbench and press E. Pick a recipe, then hit the gold zone three times.
    Better hits mean better quality (Crude → Common → Fine → Masterwork).
+   The **Jeweler's Bench** uses a different minigame inspired by the *Starcatcher* fishing mod: a needle
+   sweeps around a ring and you hit the glowing gem slots to fill a progress bar before it drains.
+   Purple slots reverse the needle. Green slots fill a *Flawless* meter for +1 quality.
 2. **Sell**: from 08:00, adventurers walk in and line up at the counter. Press E on the counter to serve them.
    Pick an item, set a price, make an offer. Gear matching their class (e.g. heavy gear for warriors) sells for more.
 3. **Restock**: buy materials at the **Supply Order Board** (left wall). Rare materials only come from
@@ -54,7 +57,7 @@ The game auto-saves every night.
 ```
 project.godot            Godot project config (autoloads = global singletons)
 scenes/main.tscn         The one scene; everything is built in code by main.gd
-data/                    ALL game content as JSON: recipes, materials, dungeons, classes, upgrades, tiers
+data/                    ALL game content as JSON: recipes, materials, dungeons, classes, upgrades, tiers, minigame tuning
 scripts/
   autoload/              Global systems (always loaded)
     event_bus.gd           Signals shared between systems

@@ -26,7 +26,7 @@ func _ready() -> void:
 	offset_top = -300
 	offset_bottom = 300
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.08, 0.06, 0.96)
+	style.bg_color = Color(0.1, 0.08, 0.06, 1.0)
 	style.border_color = Color("c8862f")
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(8)

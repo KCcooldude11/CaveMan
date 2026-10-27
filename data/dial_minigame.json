@@ -1,0 +1,18 @@
+{
+	"_comment": "Gem-setting dial minigame (inspired by the Starcatcher fishing mod). speed = needle degrees/sec, decay = progress lost per second once you start, penalty = progress lost per miss, hp = progress needed. Spot size is in degrees of the ring.",
+
+	"difficulties": {
+		"easy":   { "hp": 75,  "speed": 150, "penalty": 5,  "decay": 4, "treasure_chance": 0.5, "spots": ["normal", "normal"] },
+		"medium": { "hp": 100, "speed": 190, "penalty": 15, "decay": 4, "treasure_chance": 0.6, "spots": ["normal", "thin", "flip"] },
+		"hard":   { "hp": 140, "speed": 220, "penalty": 20, "decay": 5, "treasure_chance": 0.7, "spots": ["thin", "flip", "fading", "drifting"] }
+	},
+
+	"spot_types": {
+		"normal":   { "size": 22, "reward": 15, "color": "#e7b04a" },
+		"thin":     { "size": 15, "reward": 20, "color": "#ffe08a" },
+		"flip":     { "size": 22, "reward": 15, "color": "#c77dff", "flip": true },
+		"fading":   { "size": 22, "reward": 20, "color": "#ff6a2b", "vanish": 0.45 },
+		"drifting": { "size": 20, "reward": 18, "color": "#6fc3ff", "move": 35 },
+		"treasure": { "size": 18, "reward": 25, "color": "#6fe3a1", "treasure": true }
+	}
+}

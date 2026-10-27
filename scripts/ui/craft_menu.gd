@@ -1,7 +1,14 @@
 extends BaseMenu
 ## Recipe list for one crafting station, then the forging minigame.
 
-const Minigame := preload("res://scripts/ui/forge_minigame.gd")
+const ForgeMinigame := preload("res://scripts/ui/forge_minigame.gd")
+const DialMinigame := preload("res://scripts/ui/dial_minigame.gd")
+## Which minigame each station uses. Swap these freely to try them out.
+const STATION_MINIGAMES := {
+	"forge": ForgeMinigame,
+	"workbench": ForgeMinigame,
+	"jeweler": DialMinigame,
+}
 
 var station: String
 var _game: Node = null
@@ -44,9 +51,12 @@ func _start_craft(id: String) -> void:
 	_recipe = id
 	for c in content.get_children():
 		c.queue_free()
-	add_heading("Forging: %s" % r["name"])
-	_game = Minigame.new()
-	_game.configure(GameState.station_level(station), int(r["power"]))
+	add_heading("%s: %s" % ["Setting" if STATION_MINIGAMES[station] == DialMinigame else "Forging", r["name"]])
+	_game = STATION_MINIGAMES[station].new()
+	if _game is DialMinigame:
+		_game.configure(GameState.station_level(station), int(r["power"]), r.get("dial", ""))
+	else:
+		_game.configure(GameState.station_level(station), int(r["power"]))
 	_game.finished.connect(_on_finished)
 	content.add_child(_game)
 

@@ -14,6 +14,7 @@ func _ready() -> void:
 	test_data_loaded()
 	test_crafting()
 	test_minigame_scoring()
+	test_dial_minigame()
 	test_selling()
 	test_upgrades()
 	test_long_simulation()
@@ -160,3 +161,45 @@ func test_save_roundtrip() -> void:
 	GameState.from_dict(JSON.parse_string(before))
 	var after := JSON.stringify(GameState.to_dict())
 	check(before == after, "save -> load -> save is stable")
+
+
+func test_dial_minigame() -> void:
+	var Dial := preload("res://scripts/ui/dial_minigame.gd")
+	check(Dial.result_quality(true, 0, false) == 2, "dial: perfect run -> fine")
+	check(Dial.result_quality(true, 0, true) == 3, "dial: perfect + treasure -> masterwork")
+	check(Dial.result_quality(true, 2, false) == 1, "dial: a few misses -> common")
+	check(Dial.result_quality(false, 0, false) == 0, "dial: botched -> crude")
+	check(is_equal_approx(Dial.angle_dist(350.0, 10.0), 20.0), "dial: angle wraps around 360")
+
+	var g = Dial.new()
+	g.configure(1, 3)
+	check(g.spots.size() >= 2, "dial: easy has at least 2 slots")
+	var quality := [-1]
+	g.finished.connect(func(q): quality[0] = q)
+	# Aim at a non-treasure slot and hit until the bar is full.
+	var guard := 0
+	while quality[0] == -1 and guard < 50:
+		guard += 1
+		for s in g.spots:
+			if not s["treasure"]:
+				g.needle = s["pos"]
+				break
+		var before: float = g.progress
+		g.strike()
+		if guard == 1:
+			check(g.progress > before, "dial: hitting a slot adds progress")
+	check(quality[0] == 2, "dial: flawless run without treasure gives Fine")
+	check(g.misses == 0, "dial: no misses recorded")
+
+	var g2 = Dial.new()
+	g2.configure(1, 3)
+	g2.needle = fposmod(g2.spots[0]["pos"] + 180.0, 360.0)
+	for s in g2.spots:
+		s["pos"] = fposmod(g2.needle + 90.0, 360.0)  # move every slot away from the needle
+	var p0: float = g2.progress
+	g2.strike()
+	check(g2.progress == p0 - g2.penalty, "dial: a miss costs the penalty")
+	g2.step(1.0)
+	check(g2.progress < p0 - g2.penalty, "dial: progress decays after starting")
+	g.free()
+	g2.free()

@@ -59,6 +59,18 @@ Work in **small vertical slices**. Each phase ends with something playable. Don'
 - Renown tiers, day/night clock, save/load, HUD with goal hints
 - Automated logic tests + a 30-day economy simulation
 
+### Minigame design notes
+- **Forge / Workbench: timing bar.** Three hammer strikes, each scored on how close it lands to the gold zone's center.
+- **Jeweler: gem-setting dial**, inspired by the *Starcatcher* Minecraft fishing mod. A needle sweeps around a ring. Hit the glowing slots to raise a progress bar that slowly drains, and misses cost progress. Each slot jumps elsewhere when hit. Slot types:
+  - *thin*: worth more
+  - *flip*: reverses the needle
+  - *fading*: vanishes unless hit in time
+  - *drifting*: slides around the ring
+  - *treasure*: fills a "Flawless" meter worth +1 quality
+
+  Harder recipes get faster needles and nastier slots, and bench upgrades widen the slots. Everything is tunable in `data/dial_minigame.json`.
+- Idea for later: give each station its own minigame (e.g. a bellows rhythm game for the forge), and let rare materials add their own special slots, the way Starcatcher gives each fish its own.
+
 ### Phase 1: Make the loop *feel* good (2–4 weeks)
 **Goal: you want to play "one more day" with grey boxes.**
 - Playtest 10+ in-game days yourself. Write down every moment you were bored or confused.
@@ -152,7 +164,9 @@ Drop a `.glb` named after its key into `assets/models/` and it replaces the grey
 | `data/upgrades.json` | `costs`, `renown` | Upgrade prices and gates |
 | `time_manager.gd` | `minutes_per_second`, `PAUSE_IN_MENUS` | Day length; whether menus freeze time |
 | `adventurer_manager.gd` | `RENOWN_PER_WIN`, `FIRST_CLEAR_BONUS`, death/break chances in `_run()` | Progression speed and risk |
-| `forge_minigame.gd` | `configure()` | Minigame difficulty |
+| `forge_minigame.gd` | `configure()` | Forge/Workbench timing-bar difficulty |
+| `data/dial_minigame.json` | `difficulties` (hp, speed, penalty, decay, slots), `spot_types` | Jeweler's gem-setting dial (Starcatcher-style) |
+| `craft_menu.gd` | `STATION_MINIGAMES` | Which minigame each station uses |
 | `game_state.gd` | `START_GOLD`, starting materials in `reset()` | Opening minutes |
 
 `tests/test_runner.gd` runs a 30-day bot simulation and prints gold and renown every 5 days. Re-run it after balance changes to see the progression curve.
