@@ -9,9 +9,7 @@ var _checks := 0
 
 func _ready() -> void:
 	seed(12345)
-	GameState.reset()
-	AdventurerManager.reset()
-	Village.reset()
+	GameState.new_game()
 	test_data_loaded()
 	test_crafting()
 	test_minigame_scoring()

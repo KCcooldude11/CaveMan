@@ -9,6 +9,9 @@ var _status: RichTextLabel
 var _prompt: Label
 var _hint: Label
 var _feed: VBoxContainer
+var _banner: Label
+var _banner_sub: Label
+var _banner_t := 0.0
 
 
 func _ready() -> void:
@@ -37,6 +40,16 @@ func _ready() -> void:
 	_feed.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_feed)
+
+	_banner = _make_label(40, Color("ffc94a"))
+	_anchor(_banner, Vector2(0.5, 0.3), Rect2(-600, -40, 1200, 60))
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner_sub = _make_label(22, Color("ffe9a8"))
+	_anchor(_banner_sub, Vector2(0.5, 0.3), Rect2(-600, 22, 1200, 40))
+	_banner_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.visible = false
+	_banner_sub.visible = false
+	EventBus.celebrate.connect(_on_celebrate)
 
 	EventBus.notify.connect(_on_notify)
 	for s in [EventBus.gold_changed, EventBus.renown_changed, EventBus.time_changed]:
@@ -74,6 +87,7 @@ func _refresh_status() -> void:
 	var tier := DataDB.tier_for_renown(GameState.renown)
 	_status.text = "Day %d  -  %s  -  Shop %s\n[color=#ffd27a]%dg[/color]   Renown %d  [color=#b8b0a0](%s)[/color]" % [
 		GameState.day, TimeManager.time_string(), open, GameState.gold, GameState.renown, tier["name"]]
+	_status.text += "   [color=#9fd8ff]Prosperity %d[/color]" % Village.prosperity
 	var tonight := Village.events_on(GameState.day)
 	if not tonight.is_empty():
 		var e: Dictionary = tonight[0]
@@ -82,7 +96,21 @@ func _refresh_status() -> void:
 			"  [color=#b8b0a0](+%d more on the notice board)[/color]" % (tonight.size() - 1) if tonight.size() > 1 else ""]
 
 
+func _on_celebrate(title: String, sub: String) -> void:
+	_banner.text = title
+	_banner_sub.text = sub
+	_banner_t = 4.0
+
+
 func _process(delta: float) -> void:
+	_banner_t -= delta
+	_banner.visible = _banner_t > 0.0
+	_banner_sub.visible = _banner_t > 0.0
+	if _banner_t > 0.0:
+		var a := clampf(_banner_t, 0.0, 1.0)
+		_banner.modulate.a = a
+		_banner_sub.modulate.a = a
+		_banner.scale = Vector2.ONE * (1.0 + maxf(0.0, _banner_t - 3.7))
 	for l in _feed.get_children():
 		l.set_meta("t", float(l.get_meta("t")) - delta)
 		var t: float = l.get_meta("t")
@@ -113,6 +141,8 @@ func _on_notify(text: String) -> void:
 
 ## A light-touch tutorial: always tells a new player what to do next.
 func _goal_hint() -> String:
+	if not Happenings.pending.is_empty():
+		return "%d decision(s) are waiting for you - press B for the morning briefing." % Happenings.pending.size()
 	if GameState.items.is_empty():
 		for id in DataDB.recipes:
 			if GameState.is_recipe_unlocked(id) and GameState.station_level(DataDB.recipes[id]["station"]) > 0 \

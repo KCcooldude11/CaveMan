@@ -106,6 +106,73 @@ class Gatherable extends Interactable:
 			EventBus.notify.emit("%s: you gathered %s." % [DataDB.village["gathering"][spot]["name"], haul])
 
 
+## A restoration project in the world: ruins until it's done, then the real
+## building. Interacting opens the Village Hall so you can contribute.
+class ProjectSite extends Interactable:
+	var project: String
+	var ui: Node
+	var ruined: Node3D
+	var restored: Node3D
+
+	func _ready() -> void:
+		EventBus.projects_changed.connect(refresh)
+		refresh()
+
+	func refresh() -> void:
+		var done := Village.project_done(project)
+		ruined.visible = not done
+		restored.visible = done
+
+	func get_prompt() -> String:
+		var n: String = DataDB.world["projects"][project]["name"]
+		if Village.project_done(project):
+			return n
+		return "[E] Ruins of the %s - help restore it (Village Hall)" % n
+
+	func interact(_player: Node) -> void:
+		if not Village.project_done(project):
+			ui.open_menu_by_name("village_hall")
+
+
+## Someone you can talk to whose words depend on the state of the world.
+class Talker extends Interactable:
+	var line_fn: Callable
+
+	func get_prompt() -> String:
+		return "[E] " + prompt_text
+
+	func interact(_player: Node) -> void:
+		EventBus.notify.emit(line_fn.call())
+
+
+static func project_site(ui: Node, project: String, ruined: Node3D, restored: Node3D, size: Vector3) -> ProjectSite:
+	var p := ProjectSite.new()
+	p.project = project
+	p.ui = ui
+	p.ruined = ruined
+	p.restored = restored
+	p.add_child(ruined)
+	p.add_child(restored)
+	var cs := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	cs.shape = shape
+	cs.position.y = size.y / 2.0
+	p.add_child(cs)
+	return p
+
+
+static func talker(sheet: String, prompt: String, title: String, line_fn: Callable) -> Talker:
+	var t := Talker.new()
+	t.prompt_text = prompt
+	t.line_fn = line_fn
+	var pc := PixelCharacter.new()
+	pc.setup(sheet)
+	t.setup_body("villager_" + sheet, Vector3(0.8, 1.8, 0.8), pc)
+	t.add_child(Visuals.tag(title, Vector3(0, 2.7, 0), 24, Color("ffe9a8")))
+	return t
+
+
 static func villager(ui: Node, sheet: String, menu: String, text: String, title: String) -> Villager:
 	var v := Villager.new()
 	v.menu = menu
@@ -167,7 +234,14 @@ static func forge(ui: Node) -> CraftingStation:
 	ph.add_child(Visuals.box(Vector3(1.6, 1.0, 1.2), "stone", Vector3(0, 0.5, 0)))
 	ph.add_child(Visuals.box(Vector3(1.0, 0.25, 0.7), Color("ff7a2a"), Vector3(0, 1.05, 0), 3.0))
 	ph.add_child(Visuals.box(Vector3(0.6, 1.6, 0.6), "stone", Vector3(0, 1.8, -0.3)))
-	ph.add_child(Visuals.box(Vector3(0.7, 0.3, 0.35), "iron", Vector3(1.3, 0.75, 0.2)))  # anvil
+	# The anvil (first-person forging happens on its face).
+	ph.add_child(Visuals.box(Vector3(0.5, 0.12, 0.36), "iron", Vector3(1.6, 0.06, 0.35)))
+	ph.add_child(Visuals.box(Vector3(0.26, 0.42, 0.22), "iron", Vector3(1.6, 0.33, 0.35)))
+	ph.add_child(Visuals.box(Vector3(0.62, 0.14, 0.3), "iron", Vector3(1.6, 0.6, 0.35)))
+	var horn := Visuals.box(Vector3(0.22, 0.08, 0.12), "iron", Vector3(1.99, 0.62, 0.35))
+	ph.add_child(horn)
+	ph.add_child(Visuals.box(Vector3(0.12, 0.6, 0.12), "dark_wood", Vector3(1.15, 0.3, 0.6)))  # quench bucket post
+	s.set_meta("anvil_top", Vector3(1.6, 0.67, 0.35))
 	var light := OmniLight3D.new()
 	light.light_color = Color("ff8a3a")
 	light.light_energy = 2.0
@@ -175,7 +249,7 @@ static func forge(ui: Node) -> CraftingStation:
 	light.position = Vector3(0, 1.6, 0.6)
 	ph.add_child(light)
 	ph.add_child(Visuals.label("FORGE", Vector3(0, 2.9, 0)))
-	s.setup_body("forge", Vector3(2.0, 1.2, 1.2), ph)
+	s.setup_body("forge", Vector3(2.4, 1.2, 1.2), ph)
 	return s
 
 

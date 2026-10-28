@@ -18,9 +18,10 @@ func build() -> void:
 		add_row("[b]%s[/b]  %dg each   [color=#b8b0a0](%d left, you have %d)[/color]" % [DataDB.material_name(m), price, n, GameState.material_count(m)],
 			[button("Buy", _buy.bind(m), n <= 0 or GameState.gold < price)])
 	if not GameState.items.is_empty():
-		add_heading("Sell gear (%d%% of fair value)" % int(float(DataDB.village["merchant"]["buy_rate"]) * 100))
+		add_heading("Sell gear - Zara has %dg left to spend today" % Village.merchant_purse)
 		for item in GameState.items.duplicate():
-			add_row("%s - %dg" % [GameState.item_name(item), Village.merchant_offer(item)], [button("Sell", _sell.bind(item))])
+			var offer := Village.merchant_offer(item)
+			add_row("%s - %dg" % [GameState.item_name(item), offer], [button("Sell", _sell.bind(item), offer > Village.merchant_purse or Village.merchant_purse <= 0)])
 
 
 func _buy(m: String) -> void:
@@ -29,6 +30,6 @@ func _buy(m: String) -> void:
 
 
 func _sell(item: Dictionary) -> void:
-	GameState.add_gold(Village.merchant_offer(item))
-	GameState.remove_item(int(item["uid"]))
+	if not Village.merchant_sell(item):
+		EventBus.notify.emit("\"I can't afford that today, friend.\"")
 	refresh()

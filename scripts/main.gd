@@ -16,6 +16,7 @@ const Shop := preload("res://scripts/world/shop.gd")
 const Player := preload("res://scripts/world/player.gd")
 const UIRoot := preload("res://scripts/ui/ui_root.gd")
 const PixelFilter := preload("res://scripts/world/pixel_filter.gd")
+const ForgeSession := preload("res://scripts/world/forge_session.gd")
 
 ## Points of interest around the village.
 const TAVERN_POS := Vector3(-16, 0, 24)
@@ -23,6 +24,12 @@ const BOARD_POS := Vector3(-6, 0, 19.8)
 const MERCHANT_POS := Vector3(10, 0, 21)
 const MINE_POS := Vector3(-24, 0, -12)
 const GROVE_POS := Vector3(20, 0, -8)
+const HALL_POS := Vector3(-13, 0, 33)
+const RIVAL_POS := Vector3(15, 0, 8)
+const PROJECT_POS := {
+	"watchtower": Vector3(10, 0, 4), "chapel": Vector3(-30, 0, 12), "market": Vector3(3, 0, 27),
+	"guildhall": Vector3(-36, 0, 20), "deepmine": Vector3(-30, 0, -10),
+}
 ## Areas kept free of random trees: [center, half-size] in x/z.
 const CLEAR_ZONES := [
 	[Vector2(0, 0), Vector2(8, 8)],          # shop
@@ -34,6 +41,13 @@ const CLEAR_ZONES := [
 	[Vector2(-24, -12), Vector2(5, 5)],      # mine
 	[Vector2(20, -8), Vector2(6, 6)],        # grove
 	[Vector2(28, 16), Vector2(3, 5)],        # dungeon gate
+	[Vector2(-13, 33), Vector2(5, 4)],       # village hall
+	[Vector2(15, 8), Vector2(4.5, 4.5)],     # rival smithy
+	[Vector2(10, 4), Vector2(3, 3)],         # watchtower
+	[Vector2(-30, 12), Vector2(4, 4)],       # chapel
+	[Vector2(3, 27), Vector2(5, 3.5)],       # market hall
+	[Vector2(-36, 20), Vector2(5, 4)],       # guild hall
+	[Vector2(-30, -10), Vector2(3, 3)],      # deep mine headframe
 ]
 
 const SHOP_W := 12.0
@@ -44,6 +58,8 @@ var player: CharacterBody3D
 var shop: Node3D
 var ui: CanvasLayer
 var sun: DirectionalLight3D
+var gate_label: Label3D
+var _rival_npc: Node3D
 var env: Environment
 
 
@@ -69,14 +85,16 @@ func _ready() -> void:
 	if GameState.load_game():
 		EventBus.notify.emit("Welcome back! Day %d." % GameState.day)
 	else:
-		EventBus.notify.emit("Welcome to your new shop! Craft gear, sell it to adventurers.")
+		GameState.new_game()
+		Happenings.news = ["[color=#ffd27a]Welcome to your forge![/color] Craft gear at the Forge or Workbench, sell it to heroes at the counter, and watch the village change. Check the Notice Board in the square for what's coming."]
 	_begin_day()
 
 
 func _begin_day() -> void:
-	Village.start_day(GameState.day)
-	AdventurerManager.plan_day()
-	TimeManager.start_day()
+	Simulation.begin_day()
+	_refresh_world()
+	if not Happenings.pending.is_empty() or not Happenings.news.is_empty():
+		ui.show_briefing()
 
 
 func _on_sleep() -> void:
@@ -84,16 +102,34 @@ func _on_sleep() -> void:
 		return
 	TimeManager.running = false
 	shop.clear_all()
-	var night := AdventurerManager.run_night()
-	GameState.add_renown(int(night["renown"]))
-	var lines: Array = night["lines"]
-	var apprentice := GameState.run_apprentice()
-	if apprentice != "":
-		lines.push_front("[color=#9fd8ff]%s[/color]" % apprentice)
-	var finished_day := GameState.day
-	GameState.day += 1
-	GameState.save_game()
-	ui.show_summary(finished_day, lines, int(night["renown"]), func(): _begin_day())
+	var report := Simulation.end_day()
+	ui.show_summary(report, func(): _begin_day())
+
+
+## Make the 3D village reflect the simulation: bosses at the gate, the rival.
+func _refresh_world() -> void:
+	var bosses: PackedStringArray = []
+	for d in DataDB.dungeons:
+		var b := Dungeons.boss(d["id"])
+		if not b.is_empty():
+			bosses.append("%s lurks in the %s" % [b["name"], d["name"]])
+	gate_label.text = "\n".join(bosses)
+	if _rival_npc:
+		_rival_npc.visible = Market.rival_active
+		_rival_npc.collision_layer = 3 if Market.rival_active else 0
+		_rival_npc.get_meta("smithy").get_child(2).visible = Market.rival_active  # chimney goes cold
+
+
+## First-person forging at the forge's anvil (see world/forge_session.gd).
+func start_forge_session(level: int, power: int) -> Node:
+	var forge: Node3D = get_tree().get_first_node_in_group("forge_station")
+	var top: Vector3 = forge.to_global(forge.get_meta("anvil_top"))
+	var session := ForgeSession.new()
+	session.setup(top, level, power)
+	add_child(session)
+	player.sprite.visible = false
+	session.finished.connect(func(_q): player.sprite.visible = true)
+	return session
 
 
 func _update_sun(minutes: int) -> void:
@@ -117,7 +153,7 @@ func _setup_input() -> void:
 		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
 		"sprint": [KEY_SHIFT], "jump": [KEY_SPACE], "interact": [KEY_E],
 		"strike": [KEY_SPACE, KEY_E], "pause": [KEY_ESCAPE], "ledger": [KEY_TAB],
-		"pixel_filter": [KEY_F2],
+		"pixel_filter": [KEY_F2], "briefing": [KEY_B], "chronicle": [KEY_C],
 	}
 	for action in keys:
 		if InputMap.has_action(action):
@@ -178,6 +214,7 @@ func _build_village() -> void:
 	for h in houses:
 		add_child(Visuals.model("house", _house_placeholder(h)))
 	_build_points_of_interest()
+	_build_village_life()
 
 	# 2D pixel-art foliage scattered around (billboard sprites), kept out of
 	# the shop, the road and the points of interest.
@@ -203,6 +240,8 @@ func _build_village() -> void:
 	gate.add_child(Visuals.box(Vector3(1.4, 1.2, 6.2), "stone", Vector3(0, 5.4, 0)))
 	gate.add_child(Visuals.box(Vector3(0.3, 4.4, 3.8), Color("120d0a"), Vector3(0.4, 2.2, 0)))
 	gate.add_child(Visuals.label("DUNGEON GATE", Vector3(-0.8, 6.6, 0), 96, Color("ff9a6a")))
+	gate_label = Visuals.tag("", Vector3(-0.8, 7.6, 0), 26, Color("ff6a4a"))
+	gate.add_child(gate_label)
 	add_child(Visuals.model("dungeon_gate", gate))
 
 
@@ -289,6 +328,125 @@ func _build_points_of_interest() -> void:
 	_place(Stations.gatherable("grove", "Chop wood", grove, Vector3(3.0, 1.2, 1.6)), GROVE_POS, 0)
 
 
+## Restoration sites, the village hall and the rival smith.
+func _build_village_life() -> void:
+	# Village Hall with the mayor out front.
+	var hall := Node3D.new()
+	hall.position = HALL_POS
+	hall.add_child(Visuals.solid(Vector3(7, 4, 5), "stone", Vector3(0, 2, 0)))
+	var hroof := Visuals.box(Vector3(4.6, 4.6, 7.6), "roof", Vector3(0, 4.4, 0))
+	hroof.rotation_degrees = Vector3(0, 90, 45)
+	hroof.scale = Vector3(1.0, 0.5, 1.0)
+	hall.add_child(hroof)
+	hall.add_child(Visuals.box(Vector3(1.6, 2.4, 0.1), "dark_wood", Vector3(0, 1.2, -2.52)))
+	var hsign := Visuals.label("VILLAGE HALL", Vector3(0, 3.4, -2.7), 80, Color("ffd27a"))
+	hsign.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	hsign.rotation_degrees.y = 180
+	hall.add_child(hsign)
+	add_child(hall)
+	_place(Stations.villager(ui, "mayor", "village_hall", "Talk to Mayor Brindle (projects & investments)", "Mayor Brindle"), HALL_POS + Vector3(1.4, 0, -3.3), 0)
+
+	# Brannoc's Smithy: the competition.
+	var smithy := Node3D.new()
+	smithy.position = RIVAL_POS
+	smithy.add_child(Visuals.solid(Vector3(6, 3, 5), "stone", Vector3(0, 1.5, 0)))
+	var sroof := Visuals.box(Vector3(3.6, 3.6, 6.4), "dark_wood", Vector3(0, 3.0, 0))
+	sroof.rotation_degrees = Vector3(0, 90, 45)
+	sroof.scale = Vector3(1.0, 0.5, 1.0)
+	smithy.add_child(sroof)
+	smithy.add_child(Visuals.box(Vector3(0.8, 2.0, 0.8), "stone", Vector3(2.0, 4.0, 0)))  # chimney
+	smithy.add_child(Visuals.box(Vector3(0.7, 0.4, 0.4), "iron", Vector3(-1.2, 0.5, 3.0)))  # his anvil
+	var rsign := Visuals.label(DataDB.world["rival"]["shop"].to_upper(), Vector3(0, 3.2, 2.7), 70, Color("c8c8d0"))
+	rsign.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	smithy.add_child(rsign)
+	add_child(smithy)
+	var rival := Stations.talker("rival", "Talk to Brannoc", DataDB.world["rival"]["name"], _rival_line)
+	_place(rival, RIVAL_POS + Vector3(0.6, 0, 3.2), 0)
+	rival.set_meta("smithy", smithy)
+	_rival_npc = rival
+
+	for id in PROJECT_POS:
+		var pos: Vector3 = PROJECT_POS[id]
+		var site := _project_site(id)
+		_place(site, pos, 0)
+		var lbl := Visuals.label(DataDB.world["projects"][id]["name"].to_upper(), Vector3(0, 5.5, 0), 40, Color("e8e2d6"))
+		site.add_child(lbl)
+
+
+func _rival_line() -> String:
+	if not Market.rival_active:
+		return "The smithy is cold. Brannoc is gone."
+	var rname: String = DataDB.world["rival"]["name"]
+	if Market.rival_rep > GameState.renown + 15:
+		return "%s: \"Heroes know where the real steel is. Run along, apprentice.\"" % rname
+	if Market.rival_rep < GameState.renown - 15:
+		return "%s: \"...Fine work, that last piece of yours. Don't let it go to your head.\"" % rname
+	return "%s: \"There's only room for one forge in this village. We'll see whose.\"" % rname
+
+
+func _project_site(id: String) -> Node:
+	var ruined := Node3D.new()
+	var restored := Node3D.new()
+	var size := Vector3(4, 3, 4)
+	match id:
+		"watchtower":
+			size = Vector3(3, 7, 3)
+			ruined.add_child(Visuals.box(Vector3(3, 1.6, 3), "stone", Vector3(0, 0.8, 0)))
+			ruined.add_child(Visuals.box(Vector3(1.2, 0.8, 1.0), "stone", Vector3(1.6, 0.4, 1.2)))
+			restored.add_child(Visuals.box(Vector3(3, 7, 3), "stone", Vector3(0, 3.5, 0)))
+			restored.add_child(Visuals.box(Vector3(3.6, 0.5, 3.6), "dark_wood", Vector3(0, 7.25, 0)))
+			restored.add_child(Visuals.box(Vector3(0.1, 1.6, 0.1), "dark_wood", Vector3(0, 8.3, 0)))
+			restored.add_child(Visuals.box(Vector3(0.9, 0.5, 0.05), Color("3e5a9a"), Vector3(0.45, 8.8, 0)))
+			var g := PixelCharacter.new()
+			g.setup("guard")
+			g.position.y += 7.5
+			restored.add_child(g)
+		"chapel":
+			size = Vector3(5, 4, 7)
+			ruined.add_child(Visuals.box(Vector3(5, 1.2, 0.4), "plaster", Vector3(0, 0.6, 3.3)))
+			ruined.add_child(Visuals.box(Vector3(0.4, 2.2, 7), "plaster", Vector3(-2.3, 1.1, 0)))
+			ruined.add_child(Visuals.box(Vector3(1.5, 0.5, 1.5), "stone", Vector3(1, 0.25, -1)))
+			restored.add_child(Visuals.box(Vector3(5, 4, 7), "plaster", Vector3(0, 2, 0)))
+			var croof := Visuals.box(Vector3(3.8, 3.8, 7.4), "roof", Vector3(0, 4.2, 0))
+			croof.rotation_degrees.z = 45
+			croof.scale = Vector3(1.0, 0.6, 1.0)
+			restored.add_child(croof)
+			restored.add_child(Visuals.box(Vector3(0.3, 1.4, 0.1), Color("ffd27a"), Vector3(0, 6.6, 3.0), 1.0))
+			restored.add_child(Visuals.box(Vector3(0.9, 0.3, 0.1), Color("ffd27a"), Vector3(0, 6.8, 3.0), 1.0))
+		"market":
+			size = Vector3(8, 3.5, 5)
+			for x in [-3.5, 3.5]:
+				ruined.add_child(Visuals.box(Vector3(0.4, 1.0, 0.4), "dark_wood", Vector3(x, 0.5, 2.2)))
+			ruined.add_child(Visuals.box(Vector3(3, 0.3, 1.2), "dark_wood", Vector3(0, 0.15, 0)))
+			for x in [-3.5, -1.2, 1.2, 3.5]:
+				restored.add_child(Visuals.box(Vector3(0.3, 3.2, 0.3), "dark_wood", Vector3(x, 1.6, 2.2)))
+				restored.add_child(Visuals.box(Vector3(0.3, 3.2, 0.3), "dark_wood", Vector3(x, 1.6, -2.2)))
+			restored.add_child(Visuals.box(Vector3(8.4, 0.3, 5.4), "roof", Vector3(0, 3.35, 0)))
+			for i in 3:
+				restored.add_child(Visuals.box(Vector3(1.6, 0.9, 0.9), "wood_floor", Vector3(-2.5 + i * 2.5, 0.45, 0.5)))
+				restored.add_child(Visuals.box(Vector3(1.4, 0.15, 0.7), [Color("c94a3a"), Color("4c8a3f"), Color("ffd27a")][i], Vector3(-2.5 + i * 2.5, 0.98, 0.5)))
+		"guildhall":
+			size = Vector3(8, 5, 6)
+			ruined.add_child(Visuals.box(Vector3(8, 0.8, 6), "stone", Vector3(0, 0.4, 0)))
+			ruined.add_child(Visuals.box(Vector3(0.6, 2.5, 0.6), "stone", Vector3(-3.5, 1.25, 2.5)))
+			restored.add_child(Visuals.box(Vector3(8, 5, 6), "stone", Vector3(0, 2.5, 0)))
+			var groof := Visuals.box(Vector3(5, 5, 8.6), "roof", Vector3(0, 5.5, 0))
+			groof.rotation_degrees = Vector3(0, 90, 45)
+			groof.scale = Vector3(1.0, 0.5, 1.0)
+			restored.add_child(groof)
+			for x in [-2.5, 2.5]:
+				restored.add_child(Visuals.box(Vector3(0.9, 2.2, 0.05), Color("b5483b"), Vector3(x, 3.0, 3.03)))
+		"deepmine":
+			size = Vector3(3, 6, 3)
+			ruined.add_child(Visuals.box(Vector3(2.5, 0.3, 2.5), "dark_wood", Vector3(0, 0.15, 0)))
+			for x in [-1.2, 1.2]:
+				for z in [-1.2, 1.2]:
+					restored.add_child(Visuals.box(Vector3(0.25, 6, 0.25), "dark_wood", Vector3(x, 3, z)))
+			restored.add_child(Visuals.box(Vector3(3, 0.3, 3), "dark_wood", Vector3(0, 6, 0)))
+			restored.add_child(Visuals.cylinder(0.8, 0.25, Color("4a3020"), Vector3(0, 6.6, 0)))
+	return Stations.project_site(ui, id, ruined, restored, size)
+
+
 func _house_placeholder(pos: Vector3) -> Node3D:
 	var n := Node3D.new()
 	n.position = pos
@@ -358,7 +516,9 @@ func _build_shop() -> void:
 		root.add_child(lamp)
 
 	# Furniture & stations.
-	_place(Stations.forge(ui), Vector3(-4.0, 0.1, -4.0), 0)
+	var forge := Stations.forge(ui)
+	forge.add_to_group("forge_station")
+	_place(forge, Vector3(-4.0, 0.1, -4.0), 0)
 	_place(Stations.workbench(ui), Vector3(0, 0.1, -4.3), 0)
 	_place(Stations.jeweler(ui), Vector3(4.0, 0.1, -4.2), 0)
 	_place(Stations.menu_object(ui, "supply", "Supply Order Board", "supply_board", "dark_wood", Vector3(0.3, 1.8, 1.6)), Vector3(-5.7, 0.1, -1.0), 0)

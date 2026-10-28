@@ -20,6 +20,10 @@ var renown_tiers: Array = []
 var dial: Dictionary = {}
 var enemies: Dictionary = {}
 var village: Dictionary = {}
+var affixes: Dictionary = {}
+var heroes: Dictionary = {}
+var world: Dictionary = {}
+var happenings: Dictionary = {}
 
 
 func _ready() -> void:
@@ -33,6 +37,12 @@ func _ready() -> void:
 	enemies = _load("res://data/enemies.json")
 	enemies.erase("_comment")
 	village = _load("res://data/village.json")
+	affixes = _load("res://data/affixes.json")
+	affixes.erase("_comment")
+	heroes = _load("res://data/heroes.json")
+	world = _load("res://data/world.json")
+	happenings = _load("res://data/happenings.json")
+	happenings.erase("_comment")
 
 
 func _load(path: String) -> Variant:

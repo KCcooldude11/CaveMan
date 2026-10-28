@@ -20,6 +20,12 @@ signal adventurer_arrived(adv: Dictionary)
 
 ## Short message shown in the HUD feed.
 signal notify(text: String)
+## A big moment (legend forged, boss slain...): shown as a banner.
+signal celebrate(title: String, subtitle: String)
+## A hero bought something (for the coin sound).
+signal sold(price: int)
+## Something in the world changed that the 3D village should reflect.
+signal projects_changed
 
 ## UI open/close. Player stops moving and time pauses while a menu is open.
 signal menu_opened

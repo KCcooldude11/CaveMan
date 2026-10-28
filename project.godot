@@ -15,10 +15,15 @@ config/icon="res://icon.svg"
 
 EventBus="*res://scripts/autoload/event_bus.gd"
 DataDB="*res://scripts/autoload/data_db.gd"
+Chronicle="*res://scripts/autoload/chronicle.gd"
+Market="*res://scripts/autoload/market.gd"
+Dungeons="*res://scripts/autoload/dungeons.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 TimeManager="*res://scripts/autoload/time_manager.gd"
 AdventurerManager="*res://scripts/autoload/adventurer_manager.gd"
 Village="*res://scripts/autoload/village.gd"
+Happenings="*res://scripts/autoload/happenings.gd"
+Simulation="*res://scripts/autoload/simulation.gd"
 
 [display]
 

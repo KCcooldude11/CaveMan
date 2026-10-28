@@ -1,0 +1,15 @@
+{
+	"_comment": "State-driven village events. Each has a cooldown (days) so they stay special. Rewards are tuned here; the trigger logic lives in scripts/autoload/happenings.gd.",
+
+	"wounded_hero":   { "cooldown": 3,  "pay_mult": 1.0, "gift_renown": 2 },
+	"bidding_war":    { "cooldown": 4,  "min_level_gap": 3 },
+	"royal_envoy":    { "cooldown": 15, "min_renown": 55, "gold": 650, "renown": 10, "fail_renown": -6, "days": 4 },
+	"legendary_hero": { "cooldown": 9,  "min_renown": 30 },
+	"rival_challenge":{ "cooldown": 10, "days": 3, "win_renown": 6, "lose_renown": -3 },
+	"festival":       { "cooldown": 12, "min_prosperity": 45, "sponsor_cost": 120, "sponsor_prosperity": 8, "sponsor_renown": 2, "price_bonus": 0.25, "extra_visitors": 3 },
+	"bargain_trader": { "cooldown": 6 },
+	"treasure_map":   { "cooldown": 8, "price": 90, "vault_days": 2 },
+	"mine_vein":      { "cooldown": 14, "min_gathers": 4, "days": 3 },
+	"shortage":       { "cooldown": 7, "max_safety": 45, "price_mult": 1.9 },
+	"raid":           { "militia_per_item": 1.0, "mercenary_cost": 200, "mercenary_power": 60 }
+}

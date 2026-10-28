@@ -18,7 +18,7 @@
 		"new_chance": 0.6,
 		"due_days": [3, 5],
 		"gold_mult": 1.6,
-		"renown": [2, 4],
+		"renown": [1, 2],
 		"givers": [
 			"Captain Holt of the Town Guard",
 			"Mayor Brindle",
