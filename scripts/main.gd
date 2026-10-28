@@ -369,7 +369,7 @@ func _build_village_life() -> void:
 		var pos: Vector3 = PROJECT_POS[id]
 		var site := _project_site(id)
 		_place(site, pos, 0)
-		var lbl := Visuals.label(DataDB.world["projects"][id]["name"].to_upper(), Vector3(0, 5.5, 0), 40, Color("e8e2d6"))
+		var lbl := Visuals.label(DataDB.world["projects"][id]["name"].to_upper(), Vector3(0, 5.5, 0), 90, Color("e8e2d6"))
 		site.add_child(lbl)
 
 

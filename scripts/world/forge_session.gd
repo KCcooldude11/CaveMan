@@ -67,10 +67,10 @@ func setup(top: Vector3, station_level: int, recipe_power: int) -> void:
 func _ready() -> void:
 	_prev_camera = get_viewport().get_camera_3d()
 	_camera = Camera3D.new()
-	_camera.fov = 48
+	_camera.fov = 44
 	add_child(_camera)
-	_camera.global_position = anvil_top + Vector3(0, 0.78, 0.62)
-	_camera.look_at(anvil_top + Vector3(0, 0, -0.03), Vector3.UP)
+	_camera.global_position = anvil_top + Vector3(0, 1.0, 0.9)
+	_camera.look_at(anvil_top + Vector3(0, 0, -0.05), Vector3.UP)
 	_camera.current = true
 
 	_bar = MeshInstance3D.new()
@@ -281,7 +281,8 @@ func _process(delta: float) -> void:
 	_swing = maxf(0.0, _swing - delta)
 	_feedback_t -= delta
 	_shake = maxf(0.0, _shake - 50.0 * delta)
-	_hand.rotation = -0.15 if _swing > 0.0 else -0.75
+	# Native sprite pose = hammer face on the target; raised = rotated back.
+	_hand.rotation = 0.0 if _swing > 0.0 else 0.55
 	_camera.h_offset = randf_range(-1, 1) * _shake * 0.0006
 	_camera.v_offset = randf_range(-1, 1) * _shake * 0.0006
 	_light.light_energy = 1.0 + 2.0 * _heat
@@ -309,10 +310,10 @@ func _hand_to(screen: Vector2) -> void:
 
 func _set_heat(h: float) -> void:
 	_heat = clampf(h, 0.15, 1.0)
-	var c := Color("5a1e10").lerp(Color("ffcf6a"), _heat)
+	var c := Color("4a1a10").lerp(Color("ff8a2a"), _heat)
 	_bar_mat.albedo_color = c
 	_bar_mat.emission = c
-	_bar_mat.emission_energy_multiplier = 0.5 + 2.5 * _heat
+	_bar_mat.emission_energy_multiplier = 0.4 + 1.2 * _heat
 
 
 func _burst(big: bool) -> void:
