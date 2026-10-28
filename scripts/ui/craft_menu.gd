@@ -33,8 +33,10 @@ func build() -> void:
 			var have := GameState.material_count(m)
 			var col := "8fd18f" if have >= need else "e06c6c"
 			parts.append("[color=#%s]%d/%d %s[/color]" % [col, have, need, DataDB.material_name(m)])
-		var text := "[b]%s[/b]  [color=#b8b0a0]%s, power %d, ~%dg[/color]\n%s" % [
-			r["name"], r["slot"], int(r["power"]), int(r["value"]), "  ".join(parts)]
+		var strong := DataDB.strong_against(r["tags"])
+		var vs := "  [color=#e06c6c]strong vs %s[/color]" % ", ".join(strong) if not strong.is_empty() else ""
+		var text := "[b]%s[/b]  [color=#b8b0a0]%s, power %d, ~%dg  [%s][/color]%s\n%s" % [
+			r["name"], r["slot"], int(r["power"]), int(r["value"]), ", ".join(r["tags"]), vs, "  ".join(parts)]
 		var btn: Button
 		if not unlocked:
 			text = "[color=#777]%s[/color]" % text

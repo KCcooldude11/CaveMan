@@ -17,6 +17,25 @@ const Player := preload("res://scripts/world/player.gd")
 const UIRoot := preload("res://scripts/ui/ui_root.gd")
 const PixelFilter := preload("res://scripts/world/pixel_filter.gd")
 
+## Points of interest around the village.
+const TAVERN_POS := Vector3(-16, 0, 24)
+const BOARD_POS := Vector3(-6, 0, 19.8)
+const MERCHANT_POS := Vector3(10, 0, 21)
+const MINE_POS := Vector3(-24, 0, -12)
+const GROVE_POS := Vector3(20, 0, -8)
+## Areas kept free of random trees: [center, half-size] in x/z.
+const CLEAR_ZONES := [
+	[Vector2(0, 0), Vector2(8, 8)],          # shop
+	[Vector2(0, 16), Vector2(32, 2.5)],      # east-west road
+	[Vector2(0, 11), Vector2(2.5, 6)],       # path to the shop door
+	[Vector2(-16, 23), Vector2(6, 5)],       # tavern
+	[Vector2(-6, 20), Vector2(2.5, 2)],      # notice board
+	[Vector2(10, 21.5), Vector2(3.5, 3)],    # merchant
+	[Vector2(-24, -12), Vector2(5, 5)],      # mine
+	[Vector2(20, -8), Vector2(6, 6)],        # grove
+	[Vector2(28, 16), Vector2(3, 5)],        # dungeon gate
+]
+
 const SHOP_W := 12.0
 const SHOP_D := 10.0
 const WALL_H := 3.4
@@ -55,6 +74,7 @@ func _ready() -> void:
 
 
 func _begin_day() -> void:
+	Village.start_day(GameState.day)
 	AdventurerManager.plan_day()
 	TimeManager.start_day()
 
@@ -154,25 +174,26 @@ func _build_village() -> void:
 	add_child(Visuals.box(Vector3(3, 0.02, 12), "dirt", Vector3(0, 0.01, 11)))
 	add_child(Visuals.box(Vector3(60, 0.02, 3), "dirt", Vector3(0, 0.01, 16)))
 
-	var houses := [Vector3(-14, 0, 24), Vector3(-22, 0, 8), Vector3(-9, 0, 26), Vector3(12, 0, 25), Vector3(-26, 0, 22)]
+	var houses := [Vector3(-22, 0, 8), Vector3(-6, 0, 28), Vector3(16, 0, 28), Vector3(-28, 0, 27), Vector3(24, 0, 26)]
 	for h in houses:
 		add_child(Visuals.model("house", _house_placeholder(h)))
+	_build_points_of_interest()
 
-	# 2D pixel-art foliage scattered around (billboard sprites).
+	# 2D pixel-art foliage scattered around (billboard sprites), kept out of
+	# the shop, the road and the points of interest.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 42
-	for i in 40:
+	for i in 60:
 		var p := Vector3(rng.randf_range(-45, 45), 0, rng.randf_range(-40, 45))
-		if absf(p.x) < 10 and p.z > -9 and p.z < 20:
-			continue  # keep the shop and road clear
-		if absf(p.z - 16) < 3:
-			continue
-		add_child(Visuals.billboard("tree", p))
-	for i in 30:
-		var p := Vector3(rng.randf_range(-30, 30), 0, rng.randf_range(-12, 35))
-		if (absf(p.x) < 7.5 and p.z < 6.5) or absf(p.x) < 2.5 or absf(p.z - 16) < 2.5:
-			continue
-		add_child(Visuals.billboard("bush", p))
+		if _is_clear(p, 3.0):
+			add_child(Visuals.billboard("tree", p))
+	for i in 40:
+		var p := Vector3(rng.randf_range(-32, 32), 0, rng.randf_range(-15, 35))
+		if _is_clear(p, 1.2):
+			add_child(Visuals.billboard("bush", p))
+	# A few trees around the woodcutter's grove.
+	for off in [Vector3(-3, 0, -3), Vector3(3, 0, -4), Vector3(4, 0, 2), Vector3(-4, 0, 3), Vector3(0, 0, -5)]:
+		add_child(Visuals.billboard("tree", GROVE_POS + off))
 
 	# The dungeon gate where adventurers head off to.
 	var gate := Node3D.new()
@@ -183,6 +204,89 @@ func _build_village() -> void:
 	gate.add_child(Visuals.box(Vector3(0.3, 4.4, 3.8), Color("120d0a"), Vector3(0.4, 2.2, 0)))
 	gate.add_child(Visuals.label("DUNGEON GATE", Vector3(-0.8, 6.6, 0), 96, Color("ff9a6a")))
 	add_child(Visuals.model("dungeon_gate", gate))
+
+
+func _is_clear(p: Vector3, margin: float) -> bool:
+	for z in CLEAR_ZONES:
+		var c: Vector2 = z[0]
+		var half: Vector2 = z[1]
+		if absf(p.x - c.x) < half.x + margin and absf(p.z - c.y) < half.y + margin:
+			return false
+	for h in [Vector3(-22, 0, 8), Vector3(-6, 0, 28), Vector3(16, 0, 28), Vector3(-28, 0, 27), Vector3(24, 0, 26)]:
+		if p.distance_to(h) < 4.0 + margin:
+			return false
+	return true
+
+
+func _build_points_of_interest() -> void:
+	# Tavern: a long building with a barkeep and benches out front.
+	var tavern := Node3D.new()
+	tavern.position = TAVERN_POS
+	tavern.add_child(Visuals.solid(Vector3(9, 3.4, 5), "plaster", Vector3(0, 1.7, 0)))
+	tavern.add_child(Visuals.box(Vector3(9.1, 0.6, 5.1), "dark_wood", Vector3(0, 0.3, 0)))
+	var roof := Visuals.box(Vector3(4.2, 4.2, 9.6), "roof", Vector3(0, 3.6, 0))
+	roof.rotation_degrees = Vector3(0, 90, 45)
+	roof.scale = Vector3(1.0, 0.55, 1.0)
+	tavern.add_child(roof)
+	tavern.add_child(Visuals.box(Vector3(1.4, 2.2, 0.1), "dark_wood", Vector3(0, 1.1, 2.52)))  # door
+	var tsign := Visuals.label(DataDB.village["tavern"]["name"].to_upper(), Vector3(0, 3.0, 2.7), 80, Color("ffd27a"))
+	tsign.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	tavern.add_child(tsign)
+	for x in [-3.0, 3.0]:
+		tavern.add_child(Visuals.box(Vector3(1.6, 0.8, 0.8), "dark_wood", Vector3(x, 0.4, 4.0)))   # table
+		tavern.add_child(Visuals.box(Vector3(1.6, 0.4, 0.3), "dark_wood", Vector3(x, 0.2, 3.3)))   # bench
+	var lamp := OmniLight3D.new()
+	lamp.position = Vector3(0, 2.6, 3.2)
+	lamp.light_color = Color("ffc070")
+	lamp.light_energy = 1.4
+	lamp.omni_range = 6.0
+	tavern.add_child(lamp)
+	add_child(tavern)
+	_place(Stations.villager(ui, "barkeep", "tavern", "Talk to the barkeep (tavern)", "Barkeep Moll"), TAVERN_POS + Vector3(1.2, 0, 3.3), 0)
+
+	# Notice board in the village square, watched by the town guard.
+	var board := Node3D.new()
+	board.add_child(Visuals.box(Vector3(0.15, 2.0, 0.15), "dark_wood", Vector3(-1.0, 1.0, 0)))
+	board.add_child(Visuals.box(Vector3(0.15, 2.0, 0.15), "dark_wood", Vector3(1.0, 1.0, 0)))
+	board.add_child(Visuals.box(Vector3(2.3, 1.2, 0.1), "wood_floor", Vector3(0, 1.4, 0)))
+	board.add_child(Visuals.box(Vector3(2.5, 0.12, 0.3), "dark_wood", Vector3(0, 2.05, 0)))
+	for i in 5:  # pinned notices
+		board.add_child(Visuals.box(Vector3(0.3, 0.38, 0.02), Color("efe8d8"), Vector3(-0.8 + i * 0.4, 1.4 + (0.15 if i % 2 else -0.1), 0.07)))
+	board.add_child(Visuals.label("NOTICE BOARD", Vector3(0, 2.7, 0), 40))
+	var nb := Stations.MenuObject.new()
+	nb.menu = "notice_board"
+	nb.ui = ui
+	nb.prompt_text = "Read the notice board (forecast & commissions)"
+	nb.setup_body("notice_board", Vector3(2.4, 2.2, 0.4), board)
+	_place(nb, BOARD_POS, 0)
+	var guard := PixelCharacter.new()
+	guard.setup("guard")
+	add_child(guard)
+	guard.global_position = BOARD_POS + Vector3(1.9, guard.position.y, 0.6)
+
+	_place(Stations.merchant_stop(ui), MERCHANT_POS, 0)
+
+	# Old mine: a rocky mound with a timber-framed entrance.
+	var mine := Node3D.new()
+	mine.add_child(Visuals.box(Vector3(7, 3.5, 5), "stone", Vector3(0, 1.75, -1.5)))
+	mine.add_child(Visuals.box(Vector3(5, 1.5, 4), "stone", Vector3(0, 4.0, -2.0)))
+	mine.add_child(Visuals.box(Vector3(1.8, 2.2, 0.2), Color("0e0b09"), Vector3(0, 1.1, 1.02)))
+	mine.add_child(Visuals.box(Vector3(0.25, 2.5, 0.25), "dark_wood", Vector3(-1.0, 1.25, 1.1)))
+	mine.add_child(Visuals.box(Vector3(0.25, 2.5, 0.25), "dark_wood", Vector3(1.0, 1.25, 1.1)))
+	mine.add_child(Visuals.box(Vector3(2.4, 0.3, 0.3), "dark_wood", Vector3(0, 2.5, 1.1)))
+	mine.add_child(Visuals.box(Vector3(1.0, 0.6, 0.7), "iron", Vector3(1.8, 0.3, 2.0)))  # ore cart
+	_place(Stations.gatherable("mine", "Scavenge ore", mine, Vector3(7, 3.5, 5)), MINE_POS, 0)
+
+	# Woodcutter's grove: a log pile and a chopping stump.
+	var grove := Node3D.new()
+	for i in 3:
+		var wood_log := Visuals.cylinder(0.25, 2.2, Color("6b4a2b"), Vector3(0, 0.25 + i * 0.4, -0.5 + i * 0.15))
+		wood_log.rotation_degrees.z = 90
+		grove.add_child(wood_log)
+	grove.add_child(Visuals.cylinder(0.4, 0.6, Color("7a5231"), Vector3(1.8, 0.3, 0.6)))
+	grove.add_child(Visuals.box(Vector3(0.08, 0.7, 0.08), "dark_wood", Vector3(1.8, 0.85, 0.6)))
+	grove.add_child(Visuals.box(Vector3(0.3, 0.2, 0.06), "iron", Vector3(1.85, 1.15, 0.6)))
+	_place(Stations.gatherable("grove", "Chop wood", grove, Vector3(3.0, 1.2, 1.6)), GROVE_POS, 0)
 
 
 func _house_placeholder(pos: Vector3) -> Node3D:

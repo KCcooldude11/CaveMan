@@ -50,6 +50,20 @@ Built with **[Godot 4.3+](https://godotengine.org/download)**, which is free, sm
 5. **Upgrade** at the **Upgrade Lectern**: unlock the Jeweler's Bench, a signboard for more customers,
    an apprentice who crafts while you sleep, and more. Renown also unlocks new recipes.
 
+6. **Explore the village**:
+   - **Notice Board** (village square): the **dungeon forecast** for the next few days shows which enemies are
+     swarming which dungeon, what they're weak to, what loot the heroes will bring back, and any bounties.
+     It also has **commissions** (deliver a specific item for gold + renown) and a **bestiary**.
+   - **The Rusty Tankard** (tavern): buy a round to hear rumors (see 6 days ahead instead of 3) and find out
+     where every hero is heading tonight.
+   - **Zara's Wagon**: a travelling merchant every 3rd day. She sells rare dungeon materials and buys gear for more.
+   - **Old Mine** and **Woodcutter's Grove**: gather free iron or wood once per day (costs an hour or so).
+
+**Counters matter.** Every item has tags (blade, blunt, axe, bow, staff, magic, fire, silver, fireward...).
+Gear that hits an enemy's weakness is 30% stronger against it; weapons it resists are 30% weaker.
+Heroes tell you where they're going tonight and pay more for the right tool. A win with your counter-gear
+earns extra renown.
+
 The game auto-saves every night.
 
 ---
@@ -59,7 +73,7 @@ The game auto-saves every night.
 ```
 project.godot            Godot project config (autoloads = global singletons)
 scenes/main.tscn         The one scene; everything is built in code by main.gd
-data/                    ALL game content as JSON: recipes, materials, dungeons, classes, upgrades, tiers, minigame tuning
+data/                    ALL game content as JSON: recipes, materials, dungeons, enemies, village, classes, upgrades, tiers, minigame tuning
 scripts/
   autoload/              Global systems (always loaded)
     event_bus.gd           Signals shared between systems
@@ -67,6 +81,7 @@ scripts/
     game_state.gd          Your gold, renown, stock, upgrades + save/load
     time_manager.gd        Day clock, shop hours
     adventurer_manager.gd  NPC roster, haggling rules, overnight dungeon simulation
+    village.gd             Dungeon forecast, commissions, merchant, tavern, gathering
   main.gd                Builds the village + shop, runs the day/night loop
   world/                 Player controller + camera, pixel sprites, stations, shop queue, retro filter
   npc/adventurer_npc.gd  Walking adventurer body (waypoints, queue, speech bubble)
@@ -81,7 +96,8 @@ docs/GAME_PLAN.md        Design doc & roadmap
 
 ### Adding content (no coding)
 - **New item**: add an entry to `data/recipes.json` (station, slot, power, value, renown needed, tags, inputs).
-- **New dungeon**: add to `data/dungeons.json` (difficulty, gold, loot).
+- **New dungeon**: add to `data/dungeons.json` (difficulty, gold, native enemy).
+- **New enemy**: add to `data/enemies.json` (weak/resist tags, loot drops).
 - **New material**: add to `data/materials.json` (`buyable: false` = dungeon loot only).
 
 ### Replacing placeholder art

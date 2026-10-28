@@ -16,5 +16,6 @@ func build() -> void:
 		GameState.delete_save()
 		GameState.reset()
 		AdventurerManager.reset()
+		Village.reset()
 		get_tree().reload_current_scene()))
 	content.add_child(button("Quit", func(): get_tree().quit()))

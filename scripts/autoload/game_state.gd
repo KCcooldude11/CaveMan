@@ -201,6 +201,7 @@ func to_dict() -> Dictionary:
 		"items": items, "upgrades": upgrades, "last_recipe": last_recipe,
 		"next_uid": next_uid, "stats": stats, "first_clears": first_clears,
 		"adventurers": AdventurerManager.to_dict(),
+		"village": Village.to_dict(),
 	}
 
 
@@ -220,6 +221,7 @@ func from_dict(d: Dictionary) -> void:
 	stats.merge(_int_values(d.get("stats", {})), true)
 	first_clears = d.get("first_clears", []).duplicate()
 	AdventurerManager.from_dict(d.get("adventurers", {}))
+	Village.from_dict(d.get("village", {}))
 	EventBus.gold_changed.emit(gold)
 	EventBus.renown_changed.emit(renown)
 	EventBus.materials_changed.emit()

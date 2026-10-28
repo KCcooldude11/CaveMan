@@ -10,6 +10,9 @@ const UpgradeMenu := preload("res://scripts/ui/upgrade_menu.gd")
 const LedgerMenu := preload("res://scripts/ui/ledger_menu.gd")
 const SummaryMenu := preload("res://scripts/ui/summary_menu.gd")
 const PauseMenu := preload("res://scripts/ui/pause_menu.gd")
+const NoticeBoardMenu := preload("res://scripts/ui/notice_board_menu.gd")
+const TavernMenu := preload("res://scripts/ui/tavern_menu.gd")
+const MerchantMenu := preload("res://scripts/ui/merchant_menu.gd")
 
 var player: Node:
 	set(p):
@@ -74,6 +77,9 @@ func open_menu_by_name(menu_name: String) -> void:
 		"supply": open(SupplyMenu.new())
 		"upgrades": open(UpgradeMenu.new())
 		"ledger": open(LedgerMenu.new())
+		"notice_board": open(NoticeBoardMenu.new())
+		"tavern": open(TavernMenu.new())
+		"merchant": open(MerchantMenu.new())
 
 
 func show_summary(day: int, lines: Array, renown: int, on_continue: Callable) -> void:

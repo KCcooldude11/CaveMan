@@ -57,6 +57,108 @@ class Counter extends Interactable:
 			shop.serve(front)
 
 
+## A villager standing in the world (pixel sprite) who opens a menu.
+class Villager extends Interactable:
+	var menu: String
+	var ui: Node
+
+	func get_prompt() -> String:
+		return "[E] " + prompt_text
+
+	func interact(_player: Node) -> void:
+		ui.open_menu_by_name(menu)
+
+
+## The travelling merchant's wagon: only open on merchant days.
+class MerchantStop extends Interactable:
+	var ui: Node
+	var wagon: Node3D
+
+	func _process(_delta: float) -> void:
+		wagon.visible = Village.merchant_here(GameState.day)
+
+	func get_prompt() -> String:
+		if Village.merchant_here(GameState.day):
+			return "[E] Trade with %s" % DataDB.village["merchant"]["name"]
+		return "Merchant's spot - %s visits every %d days (next: Day %d)" % [
+			DataDB.village["merchant"]["name"], int(DataDB.village["merchant"]["every_days"]),
+			Village.next_merchant_day(GameState.day)]
+
+	func interact(_player: Node) -> void:
+		if Village.merchant_here(GameState.day):
+			ui.open_menu_by_name("merchant")
+
+
+## A free resource spot (old mine, woodcutter's grove). Once per day, costs time.
+class Gatherable extends Interactable:
+	var spot: String
+	var verb: String
+
+	func get_prompt() -> String:
+		var g: Dictionary = DataDB.village["gathering"][spot]
+		if not Village.can_gather(spot):
+			return "%s - come back tomorrow" % g["name"]
+		return "[E] %s at the %s (%d min)" % [verb, g["name"], int(g["minutes"])]
+
+	func interact(_player: Node) -> void:
+		var haul := Village.gather(spot)
+		if haul != "":
+			EventBus.notify.emit("%s: you gathered %s." % [DataDB.village["gathering"][spot]["name"], haul])
+
+
+static func villager(ui: Node, sheet: String, menu: String, text: String, title: String) -> Villager:
+	var v := Villager.new()
+	v.menu = menu
+	v.ui = ui
+	v.prompt_text = text
+	var pc := PixelCharacter.new()
+	pc.setup(sheet)
+	v.setup_body("villager_" + sheet, Vector3(0.8, 1.8, 0.8), pc)
+	v.add_child(Visuals.tag(title, Vector3(0, 2.7, 0), 24, Color("ffe9a8")))
+	return v
+
+
+static func merchant_stop(ui: Node) -> MerchantStop:
+	var m := MerchantStop.new()
+	m.ui = ui
+	var wagon := Node3D.new()
+	wagon.add_child(Visuals.box(Vector3(2.6, 0.8, 1.6), "dark_wood", Vector3(0, 0.9, 0)))
+	wagon.add_child(Visuals.box(Vector3(2.8, 0.08, 1.8), Color("7a3e8a"), Vector3(0, 2.4, 0)))  # canopy
+	for x in [-1.3, 1.3]:
+		wagon.add_child(Visuals.box(Vector3(0.1, 1.2, 0.1), "dark_wood", Vector3(x, 1.8, 0.8)))
+		wagon.add_child(Visuals.box(Vector3(0.1, 1.2, 0.1), "dark_wood", Vector3(x, 1.8, -0.8)))
+		wagon.add_child(Visuals.cylinder(0.45, 0.12, Color("4a3020"), Vector3(x * 0.7, 0.45, 0.85)))
+	for i in 3:
+		wagon.add_child(Visuals.box(Vector3(0.4, 0.4, 0.4), ["iron", "dark_wood", "stone"][i], Vector3(-0.8 + i * 0.8, 1.5, 0.2)))
+	var zara := PixelCharacter.new()
+	zara.setup("merchant")
+	zara.position.z = 1.4
+	zara.position.y += 0.0
+	wagon.add_child(zara)
+	wagon.add_child(Visuals.tag(DataDB.village["merchant"]["name"], Vector3(0, 3.0, 1.4), 24, Color("ffe9a8")))
+	m.wagon = wagon
+	m.add_child(wagon)
+	# A signpost that is always there.
+	m.add_child(Visuals.box(Vector3(0.12, 1.4, 0.12), "dark_wood", Vector3(2.0, 0.7, 1.6)))
+	m.add_child(Visuals.box(Vector3(0.8, 0.4, 0.06), "wood_floor", Vector3(2.0, 1.3, 1.65)))
+	var cs := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(3.0, 2.0, 3.2)
+	cs.shape = shape
+	cs.position = Vector3(0, 1.0, 0.6)
+	m.add_child(cs)
+	return m
+
+
+static func gatherable(spot: String, verb: String, visual: Node3D, size: Vector3) -> Gatherable:
+	var g := Gatherable.new()
+	g.spot = spot
+	g.verb = verb
+	g.setup_body(spot, size, visual)
+	g.add_child(Visuals.label(DataDB.village["gathering"][spot]["name"].to_upper(), Vector3(0, size.y + 0.8, 0), 40))
+	return g
+
+
 static func forge(ui: Node) -> CraftingStation:
 	var s := CraftingStation.new()
 	s.station = "forge"

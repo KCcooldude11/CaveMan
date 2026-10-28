@@ -18,6 +18,7 @@ DataDB="*res://scripts/autoload/data_db.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 TimeManager="*res://scripts/autoload/time_manager.gd"
 AdventurerManager="*res://scripts/autoload/adventurer_manager.gd"
+Village="*res://scripts/autoload/village.gd"
 
 [display]
 

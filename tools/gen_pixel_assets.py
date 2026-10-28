@@ -86,6 +86,16 @@ CHARACTERS = {
     "rogue": dict(skin=hexc("e0b090"), hair=hexc("2a2030"), hair_style="short", head="hood", hood=hexc("4a3560"),
                   mask=hexc("2a2030"), torso=hexc("6b4f86"), legs=hexc("2e2638"), boots=hexc("1e1828"),
                   belt=hexc("3a2a20"), weapon="dagger"),
+    # Villagers
+    "barkeep": dict(skin=hexc("e8b483"), hair=hexc("8a3b1f"), hair_style="short", beard=hexc("b5542a"),
+                    torso=hexc("8a5a2e"), legs=hexc("3a2a20"), boots=hexc("2a1e18"),
+                    apron=hexc("efe8d8"), weapon="none"),
+    "merchant": dict(skin=hexc("c98a5a"), hair=hexc("2a2030"), hair_style="short", head="hood", hood=hexc("e08a2e"),
+                     torso=hexc("7a3e8a"), legs=hexc("7a3e8a"), boots=hexc("3a2a20"), robe=True,
+                     trim=hexc("ffd27a"), belt=hexc("ffd27a"), weapon="none"),
+    "guard": dict(skin=SKIN, hair=hexc("4a3020"), hair_style="short", head="helmet", metal=hexc("9aa3ad"),
+                  torso=hexc("3e5a9a"), legs=hexc("3a3040"), boots=hexc("2a1e18"),
+                  plate=hexc("8f98a3"), weapon="sword"),
 }
 
 # Frame -> (upper body bob, left leg lift, right leg lift, arm swing)

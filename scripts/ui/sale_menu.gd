@@ -24,6 +24,10 @@ func build() -> void:
 	add_rich("Purse: [color=#ffd27a]%dg[/color]   Power: %d   Looking for: [b]%s[/b]" % [
 		int(adv["gold"]), int(AdventurerManager.power(adv)), w["slot"]])
 	add_rich("Likes gear that is: [i]%s[/i]" % ", ".join(DataDB.classes[adv["cls"]]["likes"]))
+	if w["enemy"] != "":
+		var e: Dictionary = DataDB.enemies[w["enemy"]]
+		add_rich("Heading to [b]%s[/b] tonight to face the [b]%s[/b]. [color=#e06c6c]Weak to: %s[/color]" % [
+			DataDB.dungeon(adv["plan"])["name"], e["name"], ", ".join(e["weak"])])
 	var gear: PackedStringArray = []
 	for slot in DataDB.SLOTS:
 		var g = adv["gear"][slot]
@@ -50,6 +54,11 @@ func build() -> void:
 		var r: Dictionary = DataDB.recipes[item["recipe"]]
 		var q: Dictionary = DataDB.QUALITIES[int(item["quality"])]
 		var fit := " [color=#8fd18f](suits a %s)[/color]" % AdventurerManager.class_name_of(adv) if AdventurerManager.likes(adv, r["tags"]) else ""
+		var cm := AdventurerManager.counter_mult(r["tags"], r["slot"], w["enemy"])
+		if cm > 1.0:
+			fit += " [color=#e06c6c](perfect for tonight's fight!)[/color]"
+		elif cm < 1.0:
+			fit += " [color=#9a8f86](tonight's enemy resists this)[/color]"
 		var sel := " <" if not _selected.is_empty() and int(_selected["uid"]) == int(item["uid"]) else ""
 		add_row("[color=#%s]%s[/color]  %s, power %d, fair %dg%s%s" % [
 			hex(q["color"]), GameState.item_name(item), r["slot"], GameState.item_power(item),

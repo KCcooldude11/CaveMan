@@ -54,6 +54,12 @@ func _process(delta: float) -> void:
 		EventBus.sleep_requested.emit()
 
 
+## Skip time forward (e.g. an hour spent gathering wood).
+func advance(game_minutes: int) -> void:
+	minutes = minf(minutes + game_minutes, DAY_END - 1)
+	EventBus.notify.emit("%d minutes pass..." % game_minutes)
+
+
 func start_day() -> void:
 	minutes = DAY_START
 	_last_emitted = -1

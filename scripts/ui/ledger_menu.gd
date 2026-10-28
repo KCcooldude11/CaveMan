@@ -19,10 +19,10 @@ func build() -> void:
 
 	add_heading("Dungeons")
 	for d in DataDB.dungeons:
-		var loot: PackedStringArray = []
-		for m in d["loot"]:
-			loot.append(DataDB.material_name(m))
-		add_rich("[b]%s[/b]  difficulty %d   [color=#b8b0a0]loot: %s[/color]" % [d["name"], int(d["difficulty"]), ", ".join(loot)])
+		var cond := Village.conditions(d["id"], GameState.day)
+		add_rich("[b]%s[/b]  difficulty %d   [color=#b8b0a0]tonight: %s, loot: %s[/color]" % [
+			d["name"], int(d["difficulty"]), DataDB.enemies[cond["enemy"]]["name"], DataDB.format_loot(cond["loot"])])
+	add_label("See the notice board in the village square for the full forecast.", 14, Color("b8b0a0"))
 
 	add_heading("Adventurers")
 	var list: Array = AdventurerManager.roster.duplicate()

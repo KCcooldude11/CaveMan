@@ -18,7 +18,7 @@ func _ready() -> void:
 	_status = RichTextLabel.new()
 	_status.bbcode_enabled = true
 	_status.fit_content = true
-	_anchor(_status, Vector2(0, 0), Rect2(16, 12, 600, 80))
+	_anchor(_status, Vector2(0, 0), Rect2(16, 12, 760, 110))
 	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_status.add_theme_font_size_override("normal_font_size", 20)
 	_status.add_theme_constant_override("outline_size", 6)
@@ -74,6 +74,12 @@ func _refresh_status() -> void:
 	var tier := DataDB.tier_for_renown(GameState.renown)
 	_status.text = "Day %d  -  %s  -  Shop %s\n[color=#ffd27a]%dg[/color]   Renown %d  [color=#b8b0a0](%s)[/color]" % [
 		GameState.day, TimeManager.time_string(), open, GameState.gold, GameState.renown, tier["name"]]
+	var tonight := Village.events_on(GameState.day)
+	if not tonight.is_empty():
+		var e: Dictionary = tonight[0]
+		_status.text += "\n[color=#e0b06c]Tonight: %s in %s[/color]%s" % [
+			DataDB.enemies[e["enemy"]]["name"], DataDB.dungeon(e["dungeon"])["name"],
+			"  [color=#b8b0a0](+%d more on the notice board)[/color]" % (tonight.size() - 1) if tonight.size() > 1 else ""]
 
 
 func _process(delta: float) -> void:
