@@ -120,6 +120,17 @@ static func label(text: String, pos: Vector3, size := 48, color := Color.WHITE) 
 	return l
 
 
+## A name tag / speech bubble: same size on screen at any zoom, drawn on top.
+static func tag(text: String, pos: Vector3, size := 26, color := Color.WHITE) -> Label3D:
+	var l := label(text, pos, size, color)
+	l.fixed_size = true
+	l.pixel_size = 0.0011
+	l.no_depth_test = true
+	l.render_priority = 10
+	l.outline_render_priority = 9
+	return l
+
+
 ## A solid wall/floor block with collision on the "world" layer.
 static func solid(size: Vector3, look: Variant, pos: Vector3) -> StaticBody3D:
 	var body := StaticBody3D.new()

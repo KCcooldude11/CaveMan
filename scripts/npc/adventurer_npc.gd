@@ -35,8 +35,8 @@ func _ready() -> void:
 	setup_body("adventurer_" + adv["cls"], Vector3(0.7, 1.8, 0.7), pc)
 	sprite = pc if is_instance_valid(pc) else null
 	collision_layer = 2
-	add_child(Visuals.label("%s\nLv %d %s" % [adv["name"], int(adv["level"]), cls["name"]], Vector3(0, 2.75, 0), 32))
-	bubble = Visuals.label("", Vector3(0, 3.2, 0), 36, Color("ffe9a8"))
+	add_child(Visuals.tag("%s\nLv %d %s" % [adv["name"], int(adv["level"]), cls["name"]], Vector3(0, 2.7, 0)))
+	bubble = Visuals.tag("", Vector3(0, 3.15, 0), 28, Color("ffe9a8"))
 	add_child(bubble)
 
 
