@@ -7,7 +7,7 @@ and their victories make you famous.
 > 📋 **Read [`docs/GAME_PLAN.md`](docs/GAME_PLAN.md)** for the full design, roadmap, how to get 3D art
 > without modeling it yourself, and what makes the loop addictive.
 
-![Haggling with an adventurer](docs/screenshots/haggling.png)
+![A warrior at the counter, the smith behind it](docs/screenshots/shop-pixel.png)
 
 *Placeholder pixel art for now. See the game plan for how to swap in real art.*
 
