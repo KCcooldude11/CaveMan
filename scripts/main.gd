@@ -29,7 +29,7 @@ const CLEAR_ZONES := [
 	[Vector2(0, 16), Vector2(32, 2.5)],      # east-west road
 	[Vector2(0, 11), Vector2(2.5, 6)],       # path to the shop door
 	[Vector2(-16, 23), Vector2(6, 5)],       # tavern
-	[Vector2(-6, 20), Vector2(2.5, 2)],      # notice board
+	[Vector2(-4, 21), Vector2(9, 5)],        # village square + notice board
 	[Vector2(10, 21.5), Vector2(3.5, 3)],    # merchant
 	[Vector2(-24, -12), Vector2(5, 5)],      # mine
 	[Vector2(20, -8), Vector2(6, 6)],        # grove
