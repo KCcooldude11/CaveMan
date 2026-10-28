@@ -31,42 +31,43 @@ Built with **[Godot 4.3+](https://godotengine.org/download)**, which is free, sm
 | Shift | Sprint |
 | Space | Jump |
 | **E** / left click | Interact with whatever is in front of you (stations, counter, customers, bed) |
-| Space / E / click | Strike during the crafting minigames |
+| Mouse + click | Swing the hammer at the anvil |
+| Space / E / click | Strike in the workbench / jeweler minigames |
 | Tab | Adventurer ledger |
+| B | Morning briefing (decisions, deadlines, threats) |
+| C | Village chronicle & Hall of Legends |
 | Esc | Close menu / pause menu (save, new game, quit) |
 
 ### How to play
-1. **Craft**: walk up to the Forge or Workbench and press E. Pick a recipe, then hit the gold zone three times.
-   Better hits mean better quality (Crude → Common → Fine → Masterwork).
-   The **Jeweler's Bench** uses a different minigame inspired by the *Starcatcher* fishing mod: a needle
-   sweeps around a ring and you hit the glowing gem slots to fill a progress bar before it drains.
-   Purple slots reverse the needle. Green slots fill a *Flawless* meter for +1 quality.
-2. **Sell**: from 08:00, adventurers walk in and line up at the counter. Press E on the counter to serve them.
-   Pick an item, set a price, make an offer. Gear matching their class (e.g. heavy gear for warriors) sells for more.
-3. **Restock**: buy materials at the **Supply Order Board** (left wall). Rare materials only come from
-   adventurers' dungeon loot, so buy it when they offer.
-4. **Sleep** after 18:00. Overnight, every adventurer delves. The **Night Report** shows who won, who leveled up,
-   who died, and how much **renown** your gear earned you.
-5. **Upgrade** at the **Upgrade Lectern**: unlock the Jeweler's Bench, a signboard for more customers,
-   an apprentice who crafts while you sleep, and more. Renown also unlocks new recipes.
+1. **Craft.** At the **Forge** you drop into a first-person view over the anvil. A pixel hand holds your
+   hammer and follows the mouse. Move it onto the glowing spot on the hot metal and **click as the
+   closing ring meets the spot**. *Where* and *when* both count. The Workbench uses a timing bar, and the
+   Jeweler's Bench a Starcatcher-style dial.
+   - **Infuse** a rare material for an affix: *Flaming* (fire), *Silvered*, *Sturdy* (never breaks),
+     *Warden's* (wearer rarely dies), *Vampiric*, *Lucky*, *Mithril-forged*, or *Heroic* (from a boss
+     trophy). Effects stay hidden until you experiment.
+   - Excellent work can turn out **Keen** or **Cursed**. Crafting a weapon family builds **mastery**.
+   - A Masterwork infused with a rare material may become a named **Legend**, with its own history.
+2. **Sell.** Heroes line up at the counter. Each has a personality, a loyalty to you, memories, and a plan
+   for tonight. Your shelf is sorted by how much each item helps them, with the reasons shown.
+3. **Plan.** The **Notice Board** shows each dungeon's threat, any bosses, the forecast (enemies,
+   weaknesses, modifiers, loot, bounties; distant rumors can change) and commissions.
+4. **Sleep.** Heroes delve, level up, earn titles, break gear, die, recover lost legends and hunt bosses
+   in parties. The **night report** leads with what will be remembered.
+5. **Decide.** Most mornings bring a **briefing (B)** with real choices: a wounded hero begging for armor,
+   rivals in a bidding war, a royal envoy, a legendary hero's challenge, Brannoc's contest, a festival,
+   a stranger's blueprint, a treasure map, or monsters marching on the village.
+6. **Build the village.** Contribute to restoration projects at the **Village Hall**: Watchtower,
+   Chapel, Market Hall, Guild Hall and Deep Mine. Each changes the rules and appears in the world.
+   You can also risk gold on caravans.
+7. **Remember.** The **Chronicle (C)** holds the Hall of Legends and the village's history.
 
-6. **Explore the village**:
-   - **Notice Board** (village square): the **dungeon forecast** for the next few days shows which enemies are
-     swarming which dungeon, what they're weak to, what loot the heroes will bring back, and any bounties.
-     It also has **commissions** (deliver a specific item for gold + renown) and a **bestiary**.
-   - **The Rusty Tankard** (tavern): buy a round to hear rumors (see 6 days ahead instead of 3) and find out
-     where every hero is heading tonight.
-   - **Zara's Wagon**: a travelling merchant every 3rd day. She sells rare dungeon materials and buys gear for more.
-   - **Old Mine** and **Woodcutter's Grove**: gather free iron or wood once per day (costs an hour or so).
-
-**Counters matter.** Every item has tags (blade, blunt, axe, bow, staff, magic, fire, silver, fireward...).
-Gear that hits an enemy's weakness is 30% stronger against it; weapons it resists are 30% weaker.
-Heroes tell you where they're going tonight and pay more for the right tool. A win with your counter-gear
-earns extra renown.
+**Why it matters:** gear that hits an enemy's weakness is 30% stronger, and a weapon the enemy resists
+is 30% weaker. Ignored dungeons grow dangerous: high threat raises a named **boss**, and maximum threat
+brings a **raid**. Prices follow supply and demand, and the rival smith **Brannoc** sells to every hero
+you don't serve. Beat him in two contests while out-shining him and he leaves town.
 
 The game auto-saves every night.
-
----
 
 ## Project layout
 
@@ -81,7 +82,12 @@ scripts/
     game_state.gd          Your gold, renown, stock, upgrades + save/load
     time_manager.gd        Day clock, shop hours
     adventurer_manager.gd  NPC roster, haggling rules, overnight dungeon simulation
-    village.gd             Dungeon forecast, commissions, merchant, tavern, gathering
+    village.gd             Forecast, commissions, merchant, tavern, gathering, prosperity, projects, caravans
+    dungeons.gd            Threat, faction control, bosses, raids, lost legends
+    market.gd              Dynamic prices, saturation, hero demand, the rival smith
+    happenings.gd          State-driven morning events and decisions
+    chronicle.gd           The village history
+    simulation.gd          begin_day()/end_day(): runs every system in order (game AND tests)
   main.gd                Builds the village + shop, runs the day/night loop
   world/                 Player controller + camera, pixel sprites, stations, shop queue, retro filter
   npc/adventurer_npc.gd  Walking adventurer body (waypoints, queue, speech bubble)
@@ -90,6 +96,7 @@ assets/sprites/          Pixel-art character sheets + foliage (32x40 frames, see
 assets/textures/         32x32 pixel textures for the 3D world (16 px = 1 m)
 assets/models/           Optional .glb models to replace furniture boxes
 tools/gen_pixel_assets.py  Generates the placeholder sprites/textures
+tools/gen_sounds.py        Generates the placeholder sound effects
 tests/                   Headless logic tests, economy simulation, scene smoke test
 docs/GAME_PLAN.md        Design doc & roadmap
 ```
@@ -112,8 +119,9 @@ used automatically. The sheet format and where to get art are in
 From this folder, with the Godot executable on your PATH:
 
 ```bash
-godot --headless res://tests/test_runner.tscn   # logic tests + 30-day economy simulation
-godot --headless res://tests/smoke_test.tscn    # boots the real scene, plays a fast day
+godot --headless res://tests/test_runner.tscn   # core logic tests + 30-day economy simulation
+godot --headless res://tests/systems_test.tscn  # living-world systems, exploit guards, 60-day bot campaign
+godot --headless res://tests/smoke_test.tscn    # boots the real scene: anvil, menus, a day, 4 nights, save/load
 ```
 
 (The headless run prints harmless `Parameter "m" is null` errors from the dummy renderer.)
