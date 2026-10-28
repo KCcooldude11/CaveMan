@@ -11,6 +11,10 @@ and their victories make you famous.
 
 *Placeholder pixel art for now. See the game plan for how to swap in real art.*
 
+| First-person anvil | Morning decisions | A hero with a history | The Chronicle |
+|---|---|---|---|
+| ![](docs/screenshots/anvil.png) | ![](docs/screenshots/briefing.png) | ![](docs/screenshots/hero-at-counter.png) | ![](docs/screenshots/chronicle.png) |
+
 Built with **[Godot 4.3+](https://godotengine.org/download)**, which is free, small, and scripted in GDScript (a Python-like language).
 
 ---
