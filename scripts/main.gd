@@ -174,7 +174,7 @@ func _build_village() -> void:
 	add_child(Visuals.box(Vector3(3, 0.02, 12), "dirt", Vector3(0, 0.01, 11)))
 	add_child(Visuals.box(Vector3(60, 0.02, 3), "dirt", Vector3(0, 0.01, 16)))
 
-	var houses := [Vector3(-22, 0, 8), Vector3(-6, 0, 28), Vector3(16, 0, 28), Vector3(-28, 0, 27), Vector3(24, 0, 26)]
+	var houses := [Vector3(-22, 0, 8), Vector3(-4, 0, 36), Vector3(16, 0, 30), Vector3(-28, 0, 27), Vector3(24, 0, 26)]
 	for h in houses:
 		add_child(Visuals.model("house", _house_placeholder(h)))
 	_build_points_of_interest()
@@ -212,7 +212,7 @@ func _is_clear(p: Vector3, margin: float) -> bool:
 		var half: Vector2 = z[1]
 		if absf(p.x - c.x) < half.x + margin and absf(p.z - c.y) < half.y + margin:
 			return false
-	for h in [Vector3(-22, 0, 8), Vector3(-6, 0, 28), Vector3(16, 0, 28), Vector3(-28, 0, 27), Vector3(24, 0, 26)]:
+	for h in [Vector3(-22, 0, 8), Vector3(-4, 0, 36), Vector3(16, 0, 30), Vector3(-28, 0, 27), Vector3(24, 0, 26)]:
 		if p.distance_to(h) < 4.0 + margin:
 			return false
 	return true
