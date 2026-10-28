@@ -1,0 +1,7 @@
+[
+	{ "name": "Unknown Tinkerer",    "min": 0,   "visitors": 3, "max_level": 2 },
+	{ "name": "Local Smith",         "min": 10,  "visitors": 4, "max_level": 4 },
+	{ "name": "Trusted Artisan",     "min": 30,  "visitors": 5, "max_level": 7 },
+	{ "name": "Renowned Master",     "min": 70,  "visitors": 6, "max_level": 10 },
+	{ "name": "Legendary Craftsman", "min": 150, "visitors": 7, "max_level": 15 }
+]
