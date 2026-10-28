@@ -51,7 +51,7 @@ Adventurers come to your village to dive into dungeons. You don't fight. You **f
 Work in **small vertical slices**. Each phase ends with something playable. Don't touch art until the loop is fun with grey boxes. That's how most successful indie games (Schedule 1 included) get made.
 
 ### Phase 0: Framework ✅ *(this commit)*
-- First-person controller, grey-box shop + village + dungeon gate
+- Third-person controller with 2D pixel sprites in a 3D world (EthrA / HD-2D style), pixel-textured shop + village + dungeon gate
 - 3 crafting stations, 14 recipes, 10 materials, 5 dungeons, 4 classes, 6 upgrades, all in JSON
 - Timing minigame decides item quality
 - Adventurer NPCs walk in, queue, haggle, walk off to the dungeon
@@ -80,8 +80,9 @@ Work in **small vertical slices**. Each phase ends with something playable. Don'
 - Display shelves: crafted items appear physically on racks in the shop.
 
 ### Phase 2: Art pass (1–3 weeks, see section 4)
-- Pick ONE asset family and replace grey boxes via `assets/models/<key>.glb`.
-- Add animations: adventurers walking/idling, your hands hammering.
+- Lock a palette and replace the generated sprites with real pixel art (pack, artist or Aseprite).
+- Add sprite animations: hammering at the forge, adventurers cheering or showing off new gear.
+- Pixel-textured furniture and buildings, plus extra billboard props (barrels, banners, item racks showing your stock).
 - Lighting pass: warm forge glow, lanterns at night.
 
 ### Phase 3: Content & depth (ongoing)
@@ -105,45 +106,57 @@ Work in **small vertical slices**. Each phase ends with something playable. Don'
 
 ---
 
-## 4. Getting 3D art without modeling it yourself
+## 4. Art direction: 2D pixel art in a 3D world (EthrA / HD-2D style)
 
-Schedule 1 is low-poly and stylized, and that style is very achievable with ready-made packs. The most important rule:
-**pick ONE art family and stick to it.** Mixed styles look worse than grey boxes.
+The game uses **2D pixel-art sprites standing in a simple 3D world**, the approach of *EthrA*, *Octopath Traveler* ("HD-2D"), *Paper Mario* and *Don't Starve*. It's much cheaper to produce than full 3D: no modeling, rigging or 3D animation. Characters are flipbooks of small PNGs, and buildings are just boxes with pixel textures.
 
-### Recommended: free, high quality, commercial-use OK (CC0)
-| Source | What to grab | Why |
+### How it works in the engine
+| Piece | Technique | Code |
 |---|---|---|
-| **KayKit** (Kay Lousberg, kaylousberg.itch.io) | *Adventurers* character pack, *Dungeon Remastered*, *Furniture Bits*, *Medieval Hexagon* | Rigged & **animated** adventurers (knight, barbarian, mage, rogue). It's almost exactly this game's cast. Ships as .glb/.gltf that drop straight into Godot. **Best starting point.** |
-| **Quaternius** (quaternius.com) | *Ultimate RPG Pack*, *Medieval Village MegaKit*, *Ultimate Animated Character Pack* | Huge, consistent, animated |
-| **Kenney** (kenney.nl) | *Fantasy Town Kit*, *Furniture Kit*, *Survival Kit*, UI and audio packs | Very clean, very consistent |
-| **Poly Pizza** (poly.pizza) | Search engine across thousands of CC0/CC-BY low-poly models | Good for filling one-off gaps |
+| **Characters** (you, adventurers, later monsters & pets) | `AnimatedSprite3D`. A flat sprite that always turns to face the camera (Y-axis billboard), with nearest-neighbour filtering for crisp pixels. It casts real shadows. | `scripts/world/pixel_character.gd` |
+| **Facing** | Each sheet has *front / back / side* rows. The game picks the row from the direction the character moves **relative to the camera**, and mirrors the side row for left. | `PixelCharacter.face()` |
+| **Foliage & small props** | `Sprite3D` billboards (trees, bushes, later crates, banners, item drops) | `Visuals.billboard()` |
+| **Buildings, floors, furniture** | Simple 3D boxes with 32×32 pixel textures, mapped in world space | `Visuals.tex_mat()` |
+| **One consistent pixel size** | Everything uses **16 pixels per meter**, sprites and textures alike. This is the single most important rule, because mismatched pixel sizes ("mixels") are what makes 2D+3D look cheap. | `PIXELS_PER_METER`, `TILE_METERS` |
+| **Camera** | Third-person and slightly top-down (35°), with a narrow 38° FOV for the miniature-diorama feel. Mouse orbits, wheel zooms. | `scripts/world/player.gd` |
+| **Seeing inside** | Walls between the camera and you hide automatically, and the shop roof disappears when you walk in | `player._update_cutaways()` |
+| **HD-2D polish** | Bloom, background depth-of-field blur, warm point lights | `main._build_environment()` |
+| **Optional retro filter** | **F2** snaps the 3D view to chunky 2×/3×/4× pixels (the UI stays sharp) | `scripts/world/pixel_filter.gd` |
 
-### Paid (if you outgrow the free packs)
-- **Synty POLYGON** packs (*Fantasy Kingdom*, *Dungeon*, *Fantasy Characters*): the most "commercial indie" look. Read the license for non-Unity engines before buying.
+### Sprite sheet format (what an artist delivers)
+`assets/sprites/<name>.png`, with **32×40 px frames**:
 
-### Animations
-- **Mixamo** (free, Adobe account): upload any humanoid model, auto-rig it, download walk/idle/hammering animations.
-- KayKit and Quaternius characters already include animation sets.
+| | col 0 | col 1 | col 2 | col 3 | col 4 | col 5 |
+|---|---|---|---|---|---|---|
+| **row 0: front** | idle | idle | walk | walk | walk | walk |
+| **row 1: back**  | idle | idle | walk | walk | walk | walk |
+| **row 2: side (facing right)** | idle | idle | walk | walk | walk | walk |
 
-### AI 3D generation (for props)
-- **Meshy**, **Tripo**, **Hyper3D Rodin** turn text or images into 3D models. They work well for **props** (a specific sword, an anvil, a gem) and less well for animated characters. Check each tool's commercial license for your plan tier. Run outputs through Blender's *Decimate* modifier to cut the polygon count, and match the colors to your main pack.
+The feet sit on the bottom row of each frame, and a character is about 28–32 px tall. Adventurer sheets are named after their class (`warrior.png`, `mage.png`...). Your character is `smith.png`. Overwrite a PNG and the game uses it; no code changes. Later we can add rows for *attack/hammering* and *carry* animations.
 
-### Hiring
-- For a few "hero" assets later (your shop building, a signature anvil): Fiverr, ArtStation, r/gameDevClassifieds. Roughly $30–$300 per prop depending on complexity.
+The current sprites and textures are **programmer art** generated by `tools/gen_pixel_assets.py`. They're consistent enough to build the game on, and meant to be replaced.
+
+### Where to get the art
+1. **Pixel-art asset packs (cheapest, fastest).** itch.io has thousands of 2D RPG character and tileset packs (search "top-down RPG characters 4 directions", "fantasy tileset 32x32"). Good creators to look at: *Seliel the Shaper* (Mana Seed), *Pixel Frog*, *Cup Nooble* (Sprout Lands), *LimeZu*, *Szadi art*. Many cost $5–$30 and allow commercial use. Check each license. You may need to re-arrange frames into the sheet layout above (or adapt `pixel_character.gd` to the pack's layout).
+2. **Make or edit it yourself in Aseprite** (~$20, the standard pixel-art editor). Pixel art at 32×40 is far more approachable than 3D modeling. Editing a pack's base character into your own smith or a new class is a realistic skill to learn.
+3. **Hire a pixel artist.** A full 4-direction walk/idle sheet typically runs ~$40–$200 per character on Fiverr, r/gameDevClassifieds or itch.io's "pixel art commissions" community. Order one character first to lock the style, then order the rest from the same artist.
+4. **AI pixel-art tools** (e.g. PixelLab, Retro Diffusion) can draft characters and directional views quickly. Expect to clean up the output in Aseprite, and check the tool's commercial-use terms.
+5. **3D environment pieces.** Keep them simple: boxes and slopes with pixel textures. *Crocotile 3D* (~$25) is built for exactly this, letting you "paint" pixel tiles onto low-poly 3D shapes, and it exports .glb/.obj that drop into `assets/models/`. Free CC0 tilesets from Kenney work as textures too.
+
+**Style tip:** decide your palette early (Lospec.com has curated palettes) and use it for every sprite and texture. A shared palette is what makes assets from different sources look like one game.
 
 ### How art plugs into this project (no code changes)
-Drop a `.glb` named after its key into `assets/models/` and it replaces the grey box automatically:
+- **Sprites:** `assets/sprites/<name>.png` (the sheet layout above)
+- **Textures:** `assets/textures/<name>.png`, 32×32 tiles covering 2 m: `wood_floor`, `plaster`, `stone`, `grass`, `dirt`, `roof`, `dark_wood`, `iron`
+- **3D models** (optional, e.g. from Crocotile 3D): drop a `.glb` named after its key into `assets/models/` and it replaces the matching grey box:
 
 | Key | Replaces |
 |---|---|
 | `forge`, `workbench`, `jeweler` | crafting stations |
 | `counter`, `bed`, `lectern`, `supply_board`, `ledger_board` | furniture |
-| `adventurer_warrior`, `adventurer_ranger`, `adventurer_mage`, `adventurer_rogue` | NPC bodies (one per class) |
 | `house`, `dungeon_gate` | village props |
 
-(Models should face **-Z**, have their origin at the **bottom center**, and be about real-world size: 1 unit = 1 meter.)
-
----
+(Models should face **-Z**, have their origin at the **bottom center**, and use 1 unit = 1 meter.)
 
 ## 5. Learning path (no prior game dev needed)
 

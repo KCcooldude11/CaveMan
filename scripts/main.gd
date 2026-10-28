@@ -15,6 +15,7 @@ extends Node3D
 const Shop := preload("res://scripts/world/shop.gd")
 const Player := preload("res://scripts/world/player.gd")
 const UIRoot := preload("res://scripts/ui/ui_root.gd")
+const PixelFilter := preload("res://scripts/world/pixel_filter.gd")
 
 const SHOP_W := 12.0
 const SHOP_D := 10.0
@@ -37,8 +38,10 @@ func _ready() -> void:
 
 	player = Player.new()
 	add_child(player)
-	player.global_position = Vector3(0, 0.1, 0)
-	player.rotation.y = PI  # face the counter / door
+	player.global_position = Vector3(0, 0.1, 0.8)
+	player.facing = Vector3(0, 0, 1)  # toward the counter / door
+	player.snap_camera()
+	add_child(PixelFilter.new())
 
 	ui.player = player
 	EventBus.sleep_requested.connect(_on_sleep)
@@ -94,6 +97,7 @@ func _setup_input() -> void:
 		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
 		"sprint": [KEY_SHIFT], "jump": [KEY_SPACE], "interact": [KEY_E],
 		"strike": [KEY_SPACE, KEY_E], "pause": [KEY_ESCAPE], "ledger": [KEY_TAB],
+		"pixel_filter": [KEY_F2],
 	}
 	for action in keys:
 		if InputMap.has_action(action):
@@ -127,7 +131,15 @@ func _build_environment() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.ssao_enabled = true
 	env.glow_enabled = true
+	env.glow_bloom = 0.15
 	we.environment = env
+	# A soft background blur sells the "tiny diorama" HD-2D look.
+	var attrs := CameraAttributesPractical.new()
+	attrs.dof_blur_far_enabled = true
+	attrs.dof_blur_far_distance = 22.0
+	attrs.dof_blur_far_transition = 12.0
+	attrs.dof_blur_amount = 0.08
+	we.camera_attributes = attrs
 	add_child(we)
 
 	sun = DirectionalLight3D.new()
@@ -137,21 +149,37 @@ func _build_environment() -> void:
 
 
 func _build_village() -> void:
-	add_child(Visuals.solid(Vector3(120, 1, 120), Color("6d8f4e"), Vector3(0, -0.5, 0)))
+	add_child(Visuals.solid(Vector3(120, 1, 120), "grass", Vector3(0, -0.5, 0)))
 	# Dirt road: shop door -> village (west) and -> dungeon gate (east).
-	add_child(Visuals.box(Vector3(3, 0.02, 12), Color("9a8462"), Vector3(0, 0.01, 11)))
-	add_child(Visuals.box(Vector3(60, 0.02, 3), Color("9a8462"), Vector3(0, 0.01, 16)))
+	add_child(Visuals.box(Vector3(3, 0.02, 12), "dirt", Vector3(0, 0.01, 11)))
+	add_child(Visuals.box(Vector3(60, 0.02, 3), "dirt", Vector3(0, 0.01, 16)))
 
 	var houses := [Vector3(-14, 0, 24), Vector3(-22, 0, 8), Vector3(-9, 0, 26), Vector3(12, 0, 25), Vector3(-26, 0, 22)]
 	for h in houses:
 		add_child(Visuals.model("house", _house_placeholder(h)))
 
+	# 2D pixel-art foliage scattered around (billboard sprites).
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	for i in 40:
+		var p := Vector3(rng.randf_range(-45, 45), 0, rng.randf_range(-40, 45))
+		if absf(p.x) < 10 and p.z > -9 and p.z < 20:
+			continue  # keep the shop and road clear
+		if absf(p.z - 16) < 3:
+			continue
+		add_child(Visuals.billboard("tree", p))
+	for i in 30:
+		var p := Vector3(rng.randf_range(-30, 30), 0, rng.randf_range(-12, 35))
+		if (absf(p.x) < 7.5 and p.z < 6.5) or absf(p.x) < 2.5 or absf(p.z - 16) < 2.5:
+			continue
+		add_child(Visuals.billboard("bush", p))
+
 	# The dungeon gate where adventurers head off to.
 	var gate := Node3D.new()
 	gate.position = Vector3(28, 0, 16)
-	gate.add_child(Visuals.box(Vector3(1.2, 5, 1.2), Color("55524d"), Vector3(0, 2.5, -2.5)))
-	gate.add_child(Visuals.box(Vector3(1.2, 5, 1.2), Color("55524d"), Vector3(0, 2.5, 2.5)))
-	gate.add_child(Visuals.box(Vector3(1.4, 1.2, 6.2), Color("4a4743"), Vector3(0, 5.4, 0)))
+	gate.add_child(Visuals.box(Vector3(1.2, 5, 1.2), "stone", Vector3(0, 2.5, -2.5)))
+	gate.add_child(Visuals.box(Vector3(1.2, 5, 1.2), "stone", Vector3(0, 2.5, 2.5)))
+	gate.add_child(Visuals.box(Vector3(1.4, 1.2, 6.2), "stone", Vector3(0, 5.4, 0)))
 	gate.add_child(Visuals.box(Vector3(0.3, 4.4, 3.8), Color("120d0a"), Vector3(0.4, 2.2, 0)))
 	gate.add_child(Visuals.label("DUNGEON GATE", Vector3(-0.8, 6.6, 0), 96, Color("ff9a6a")))
 	add_child(Visuals.model("dungeon_gate", gate))
@@ -161,41 +189,67 @@ func _house_placeholder(pos: Vector3) -> Node3D:
 	var n := Node3D.new()
 	n.position = pos
 	n.rotation.y = randf() * TAU
-	n.add_child(Visuals.solid(Vector3(5, 3, 4), Color("c9b48a"), Vector3(0, 1.5, 0)))
-	var roof := Visuals.box(Vector3(3.6, 3.6, 4.4), Color("8a3b2b"), Vector3(0, 3.0, 0))
+	n.add_child(Visuals.solid(Vector3(5, 3, 4), "plaster", Vector3(0, 1.5, 0)))
+	n.add_child(Visuals.box(Vector3(5.1, 0.6, 4.1), "dark_wood", Vector3(0, 0.3, 0)))
+	var roof := Visuals.box(Vector3(3.6, 3.6, 4.4), "roof", Vector3(0, 3.0, 0))
 	roof.rotation_degrees.z = 45
 	roof.scale = Vector3(1.0, 0.55, 1.0)
 	n.add_child(roof)
 	return n
 
 
+## A wall that disappears while it blocks the camera's view of the player.
+## `outward` points out of the building; indoors, walls facing the camera hide.
+func _cutaway_wall(parent: Node, size: Vector3, look: Variant, pos: Vector3, outward: Vector3) -> void:
+	var w := Visuals.solid(size, look, pos)
+	parent.add_child(w)
+	w.add_to_group("cutaway")
+	w.set_meta("mesh", w.get_child(0))
+	w.set_meta("aabb", AABB(pos - size / 2.0, size).grow(0.05))
+	w.set_meta("outward", outward)
+	w.set_meta("indoors", AABB(Vector3(-SHOP_W / 2.0, 0, -SHOP_D / 2.0), Vector3(SHOP_W, WALL_H, SHOP_D)))
+
+
 func _build_shop() -> void:
 	var hw := SHOP_W / 2.0
 	var hd := SHOP_D / 2.0
-	var wall := Color("b8a07a")
 	var root := Node3D.new()
 	root.name = "ShopBuilding"
 	add_child(root)
 
-	root.add_child(Visuals.solid(Vector3(SHOP_W, 0.1, SHOP_D), Color("7a6650"), Vector3(0, 0.05, 0)))
-	root.add_child(Visuals.solid(Vector3(SHOP_W, 0.2, SHOP_D), Color("5e4a36"), Vector3(0, WALL_H, 0)))
-	root.add_child(Visuals.solid(Vector3(SHOP_W, WALL_H, 0.2), wall, Vector3(0, WALL_H / 2, -hd)))
-	root.add_child(Visuals.solid(Vector3(0.2, WALL_H, SHOP_D), wall, Vector3(-hw, WALL_H / 2, 0)))
-	root.add_child(Visuals.solid(Vector3(0.2, WALL_H, SHOP_D), wall, Vector3(hw, WALL_H / 2, 0)))
+	root.add_child(Visuals.solid(Vector3(SHOP_W, 0.1, SHOP_D), "wood_floor", Vector3(0, 0.05, 0)))
+	_cutaway_wall(root, Vector3(SHOP_W, WALL_H, 0.2), "plaster", Vector3(0, WALL_H / 2, -hd), Vector3.FORWARD)
+	_cutaway_wall(root, Vector3(0.2, WALL_H, SHOP_D), "plaster", Vector3(-hw, WALL_H / 2, 0), Vector3.LEFT)
+	_cutaway_wall(root, Vector3(0.2, WALL_H, SHOP_D), "plaster", Vector3(hw, WALL_H / 2, 0), Vector3.RIGHT)
 	# Front wall with a 2m door gap in the middle.
 	var seg := (SHOP_W - 2.0) / 2.0
-	root.add_child(Visuals.solid(Vector3(seg, WALL_H, 0.2), wall, Vector3(-1.0 - seg / 2, WALL_H / 2, hd)))
-	root.add_child(Visuals.solid(Vector3(seg, WALL_H, 0.2), wall, Vector3(1.0 + seg / 2, WALL_H / 2, hd)))
-	root.add_child(Visuals.solid(Vector3(2.0, 0.9, 0.2), wall, Vector3(0, WALL_H - 0.45, hd)))
-	var shop_sign := Visuals.label("FORGE & FORTUNE", Vector3(0, WALL_H + 0.6, hd + 0.3), 120, Color("ffd27a"))
+	_cutaway_wall(root, Vector3(seg, WALL_H, 0.2), "plaster", Vector3(-1.0 - seg / 2, WALL_H / 2, hd), Vector3.BACK)
+	_cutaway_wall(root, Vector3(seg, WALL_H, 0.2), "plaster", Vector3(1.0 + seg / 2, WALL_H / 2, hd), Vector3.BACK)
+	_cutaway_wall(root, Vector3(2.0, 0.9, 0.2), "plaster", Vector3(0, WALL_H - 0.45, hd), Vector3.BACK)
+	# Timber frame along the base of the walls.
+	for z in [-hd, hd]:
+		root.add_child(Visuals.box(Vector3(SHOP_W + 0.1, 0.4, 0.25), "dark_wood", Vector3(0, 0.2, z)))
+	for x in [-hw, hw]:
+		root.add_child(Visuals.box(Vector3(0.25, 0.4, SHOP_D + 0.1), "dark_wood", Vector3(x, 0.2, 0)))
+
+	# Roof: visible from outside, hidden while you're indoors.
+	var roof := Node3D.new()
+	var slab := Visuals.box(Vector3(SHOP_W + 1.0, 0.3, SHOP_D + 1.0), "roof", Vector3(0, WALL_H + 0.15, 0))
+	roof.add_child(slab)
+	var ridge := Visuals.box(Vector3(SHOP_W + 1.0, 1.4, SHOP_D * 0.55), "roof", Vector3(0, WALL_H + 0.9, 0))
+	roof.add_child(ridge)
+	roof.add_to_group("roof")
+	roof.set_meta("indoors", AABB(Vector3(-hw, 0, -hd), Vector3(SHOP_W, WALL_H, SHOP_D)))
+	root.add_child(roof)
+	var shop_sign := Visuals.label("FORGE & FORTUNE", Vector3(0, WALL_H + 0.6, hd + 0.6), 120, Color("ffd27a"))
 	shop_sign.billboard = BaseMaterial3D.BILLBOARD_DISABLED
-	root.add_child(shop_sign)
+	roof.add_child(shop_sign)
 
 	for p in [Vector3(-3, 3.0, -2), Vector3(3, 3.0, -2), Vector3(0, 3.0, 2.5)]:
 		var lamp := OmniLight3D.new()
 		lamp.position = p
 		lamp.light_color = Color("ffd9a0")
-		lamp.light_energy = 1.2
+		lamp.light_energy = 1.0
 		lamp.omni_range = 7.0
 		root.add_child(lamp)
 
@@ -203,7 +257,7 @@ func _build_shop() -> void:
 	_place(Stations.forge(ui), Vector3(-4.0, 0.1, -4.0), 0)
 	_place(Stations.workbench(ui), Vector3(0, 0.1, -4.3), 0)
 	_place(Stations.jeweler(ui), Vector3(4.0, 0.1, -4.2), 0)
-	_place(Stations.menu_object(ui, "supply", "Supply Order Board", "supply_board", Color("6b4a2b"), Vector3(0.3, 1.8, 1.6)), Vector3(-5.7, 0.1, -1.0), 0)
+	_place(Stations.menu_object(ui, "supply", "Supply Order Board", "supply_board", "dark_wood", Vector3(0.3, 1.8, 1.6)), Vector3(-5.7, 0.1, -1.0), 0)
 	_place(Stations.menu_object(ui, "ledger", "Adventurer Ledger", "ledger_board", Color("3e5a7a"), Vector3(0.3, 1.8, 1.6)), Vector3(5.7, 0.1, -1.0), 0)
 	_place(Stations.menu_object(ui, "upgrades", "Upgrade Lectern", "lectern", Color("7a3e5a"), Vector3(0.7, 1.1, 0.7)), Vector3(4.5, 0.1, 1.8), 0)
 	_place(Stations.bed(), Vector3(-4.6, 0.1, 2.6), 0)

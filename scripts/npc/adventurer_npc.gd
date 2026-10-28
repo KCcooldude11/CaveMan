@@ -18,6 +18,7 @@ var path: Array = []           # Vector3 waypoints still to walk
 var queue_spot := Vector3.ZERO
 var patience := PATIENCE_MINUTES
 var bubble: Label3D
+var sprite: PixelCharacter
 var _bubble_time := 0.0
 
 
@@ -29,15 +30,13 @@ func setup(a: Dictionary, s: Node, arrive_path: Array) -> void:
 
 func _ready() -> void:
 	var cls: Dictionary = DataDB.classes[adv["cls"]]
-	var color := Color(cls["color"])
-	var ph := Node3D.new()
-	ph.add_child(Visuals.cylinder(0.32, 1.1, color, Vector3(0, 0.75, 0)))
-	ph.add_child(Visuals.sphere(0.24, Color("e8c4a0"), Vector3(0, 1.5, 0)))
-	ph.add_child(Visuals.box(Vector3(0.3, 0.08, 0.1), Color("222222"), Vector3(0, 1.55, -0.2)))  # eyes = facing
-	setup_body("adventurer_" + adv["cls"], Vector3(0.7, 1.8, 0.7), ph)
+	var pc := PixelCharacter.new()
+	pc.setup(adv["cls"])   # assets/sprites/<class>.png
+	setup_body("adventurer_" + adv["cls"], Vector3(0.7, 1.8, 0.7), pc)
+	sprite = pc if is_instance_valid(pc) else null
 	collision_layer = 2
-	add_child(Visuals.label("%s\nLv %d %s" % [adv["name"], int(adv["level"]), cls["name"]], Vector3(0, 2.15, 0), 36))
-	bubble = Visuals.label("", Vector3(0, 2.6, 0), 40, Color("ffe9a8"))
+	add_child(Visuals.label("%s\nLv %d %s" % [adv["name"], int(adv["level"]), cls["name"]], Vector3(0, 2.75, 0), 32))
+	bubble = Visuals.label("", Vector3(0, 3.2, 0), 36, Color("ffe9a8"))
 	add_child(bubble)
 
 
@@ -92,8 +91,10 @@ func _physics_process(delta: float) -> void:
 			return
 
 	if TimeManager.is_paused() and state != State.LEAVING:
+		_face(Vector3.ZERO)
 		return
 	if path.is_empty():
+		_face(Vector3.ZERO)
 		if state == State.ARRIVING:
 			state = State.QUEUED
 			path = [queue_spot]
@@ -111,4 +112,9 @@ func _physics_process(delta: float) -> void:
 	if step.length() > to.length():
 		step = to
 	global_position += step
-	look_at(global_position + to.normalized(), Vector3.UP)
+	_face(to)
+
+
+func _face(dir: Vector3) -> void:
+	if sprite:
+		sprite.face(dir)

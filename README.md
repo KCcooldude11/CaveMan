@@ -1,6 +1,6 @@
 # Forge & Fortune *(working title)*
 
-A 3D craft-and-upgrade game in the spirit of *Schedule 1*. You're not the hero: you're the **village crafter**
+A craft-and-upgrade game in the spirit of *Schedule 1*, with 2D pixel-art characters in a 3D world (like *EthrA*). You're not the hero: you're the **village crafter**
 who forges weapons, armor and jewelry for the NPC adventurers who dive into dungeons. Equip them well,
 and their victories make you famous.
 
@@ -9,7 +9,7 @@ and their victories make you famous.
 
 ![Haggling with an adventurer](docs/screenshots/haggling.png)
 
-*Grey-box placeholder art for now. See the game plan for how to swap in real models.*
+*Placeholder pixel art for now. See the game plan for how to swap in real art.*
 
 Built with **[Godot 4.3+](https://godotengine.org/download)**, which is free, small, and scripted in GDScript (a Python-like language).
 
@@ -25,16 +25,18 @@ Built with **[Godot 4.3+](https://godotengine.org/download)**, which is free, sm
 | Key | Action |
 |---|---|
 | WASD / arrows | Move |
-| Mouse | Look |
+| Mouse | Orbit camera |
+| Mouse wheel | Zoom |
+| F2 | Cycle the retro pixel filter |
 | Shift | Sprint |
 | Space | Jump |
-| **E** / left click | Interact (stations, counter, customers, bed) |
+| **E** / left click | Interact with whatever is in front of you (stations, counter, customers, bed) |
 | Space / E / click | Strike during the crafting minigames |
 | Tab | Adventurer ledger |
 | Esc | Close menu / pause menu (save, new game, quit) |
 
 ### How to play
-1. **Craft**: walk to the Forge or Workbench and press E. Pick a recipe, then hit the gold zone three times.
+1. **Craft**: walk up to the Forge or Workbench and press E. Pick a recipe, then hit the gold zone three times.
    Better hits mean better quality (Crude → Common → Fine → Masterwork).
    The **Jeweler's Bench** uses a different minigame inspired by the *Starcatcher* fishing mod: a needle
    sweeps around a ring and you hit the glowing gem slots to fill a progress bar before it drains.
@@ -66,10 +68,13 @@ scripts/
     time_manager.gd        Day clock, shop hours
     adventurer_manager.gd  NPC roster, haggling rules, overnight dungeon simulation
   main.gd                Builds the village + shop, runs the day/night loop
-  world/                 Player controller, stations, shop queue, placeholder visuals
+  world/                 Player controller + camera, pixel sprites, stations, shop queue, retro filter
   npc/adventurer_npc.gd  Walking adventurer body (waypoints, queue, speech bubble)
   ui/                    HUD + every menu (craft, minigame, sale, supply, upgrades, ledger, night report)
-assets/models/           Drop .glb models here to replace grey boxes (see below)
+assets/sprites/          Pixel-art character sheets + foliage (32x40 frames, see docs)
+assets/textures/         32x32 pixel textures for the 3D world (16 px = 1 m)
+assets/models/           Optional .glb models to replace furniture boxes
+tools/gen_pixel_assets.py  Generates the placeholder sprites/textures
 tests/                   Headless logic tests, economy simulation, scene smoke test
 docs/GAME_PLAN.md        Design doc & roadmap
 ```
@@ -80,9 +85,9 @@ docs/GAME_PLAN.md        Design doc & roadmap
 - **New material**: add to `data/materials.json` (`buyable: false` = dungeon loot only).
 
 ### Replacing placeholder art
-Put a model named `<key>.glb` in `assets/models/` and it's used automatically instead of the grey box,
-e.g. `forge.glb`, `adventurer_warrior.glb`, `house.glb`. Full list of keys in
-[`docs/GAME_PLAN.md`](docs/GAME_PLAN.md#how-art-plugs-into-this-project-no-code-changes).
+Overwrite any PNG in `assets/sprites/` or `assets/textures/` with real pixel art in the same layout and it's
+used automatically. The sheet format and where to get art are in
+[`docs/GAME_PLAN.md`](docs/GAME_PLAN.md#4-art-direction-2d-pixel-art-in-a-3d-world-ethra--hd-2d-style).
 
 ---
 

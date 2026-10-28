@@ -25,15 +25,8 @@ func _ready() -> void:
 	_status.add_theme_color_override("font_outline_color", Color.BLACK)
 	add_child(_status)
 
-	var cross := ColorRect.new()
-	cross.color = Color(1, 1, 1, 0.85)
-	cross.size = Vector2(6, 6)
-	_anchor(cross, Vector2(0.5, 0.5), Rect2(-3, -3, 6, 6))
-	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(cross)
-
 	_prompt = _make_label(22)
-	_anchor(_prompt, Vector2(0.5, 0.5), Rect2(-400, 24, 800, 40))
+	_anchor(_prompt, Vector2(0.5, 1), Rect2(-400, -110, 800, 40))
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	_hint = _make_label(17, Color("ffe9a8"))
@@ -118,7 +111,7 @@ func _goal_hint() -> String:
 		for id in DataDB.recipes:
 			if GameState.is_recipe_unlocked(id) and GameState.station_level(DataDB.recipes[id]["station"]) > 0 \
 					and GameState.has_materials(DataDB.recipes[id]["inputs"]):
-				return "Goal: craft something at the Forge or Workbench (look at it and press E)."
+				return "Goal: craft something at the Forge or Workbench (walk up to it and press E)."
 		return "Goal: buy materials at the Supply Order Board (left wall)."
 	if TimeManager.is_shop_open():
 		return "Goal: serve adventurers at the counter. Gear you sell earns renown when they win."
