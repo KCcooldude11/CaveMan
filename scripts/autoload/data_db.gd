@@ -18,6 +18,12 @@ var dungeons: Array = []
 var upgrades: Dictionary = {}
 var renown_tiers: Array = []
 var dial: Dictionary = {}
+var enemies: Dictionary = {}
+var village: Dictionary = {}
+var affixes: Dictionary = {}
+var heroes: Dictionary = {}
+var world: Dictionary = {}
+var happenings: Dictionary = {}
 
 
 func _ready() -> void:
@@ -28,6 +34,15 @@ func _ready() -> void:
 	upgrades = _load("res://data/upgrades.json")
 	renown_tiers = _load("res://data/renown_tiers.json")
 	dial = _load("res://data/dial_minigame.json")
+	enemies = _load("res://data/enemies.json")
+	enemies.erase("_comment")
+	village = _load("res://data/village.json")
+	affixes = _load("res://data/affixes.json")
+	affixes.erase("_comment")
+	heroes = _load("res://data/heroes.json")
+	world = _load("res://data/world.json")
+	happenings = _load("res://data/happenings.json")
+	happenings.erase("_comment")
 
 
 func _load(path: String) -> Variant:
@@ -64,6 +79,31 @@ func next_tier(renown: int) -> Variant:
 		if int(t["min"]) > renown:
 			return t
 	return null
+
+
+func dungeon(id: String) -> Dictionary:
+	for d in dungeons:
+		if d["id"] == id:
+			return d
+	return {}
+
+
+## Names of enemies this set of tags is strong against.
+func strong_against(tags: Array) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for e in enemies:
+		for t in tags:
+			if t in enemies[e]["weak"]:
+				out.append(enemies[e]["name"])
+				break
+	return out
+
+
+func format_loot(loot: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	for m in loot:
+		parts.append(material_name(m))
+	return ", ".join(parts)
 
 
 func format_inputs(inputs: Dictionary) -> String:

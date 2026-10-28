@@ -9,14 +9,15 @@ var _checks := 0
 
 func _ready() -> void:
 	seed(12345)
-	GameState.reset()
-	AdventurerManager.reset()
+	GameState.new_game()
 	test_data_loaded()
 	test_crafting()
 	test_minigame_scoring()
 	test_dial_minigame()
 	test_selling()
 	test_upgrades()
+	test_forecast_and_counters()
+	test_village_activities()
 	test_long_simulation()
 	test_save_roundtrip()
 	print("\n%d checks, %d failures" % [_checks, _failures])
@@ -40,8 +41,13 @@ func test_data_loaded() -> void:
 		for m in r["inputs"]:
 			check(DataDB.materials.has(m), "%s input %s exists" % [id, m])
 	for d in DataDB.dungeons:
-		for m in d["loot"]:
-			check(DataDB.materials.has(m), "dungeon loot %s exists" % m)
+		check(DataDB.enemies.has(d["enemy"]), "dungeon %s has a known enemy" % d["id"])
+	for e in DataDB.enemies:
+		for m in DataDB.enemies[e]["loot"]:
+			check(DataDB.materials.has(m), "enemy loot %s exists" % m)
+	for spot in DataDB.village["gathering"]:
+		for m in DataDB.village["gathering"][spot]["yield"]:
+			check(DataDB.materials.has(m), "gathering yield %s exists" % m)
 
 
 func test_crafting() -> void:
@@ -102,7 +108,9 @@ func test_upgrades() -> void:
 func test_long_simulation() -> void:
 	GameState.reset()
 	AdventurerManager.reset()
+	Village.reset()
 	for day in 30:
+		Village.start_day(GameState.day)
 		AdventurerManager.plan_day()
 		# Bot crafts the best affordable unlocked recipe a few times.
 		for i in 4:
@@ -203,3 +211,66 @@ func test_dial_minigame() -> void:
 	check(g2.progress < p0 - g2.penalty, "dial: progress decays after starting")
 	g.free()
 	g2.free()
+
+
+func test_forecast_and_counters() -> void:
+	GameState.reset()
+	AdventurerManager.reset()
+	Village.reset()
+	Village.start_day(1)
+	check(not Village.events_on(1).is_empty(), "forecast: tonight has at least one event")
+	check(not Village.events_on(3).is_empty(), "forecast: events generated days ahead")
+	check(Village.visible_days() == 3, "forecast: 3 days visible without rumors")
+
+	# Force skeletons into the crypt tonight and compare a sword vs a mace.
+	Village.events = [{ "day": 1, "dungeon": "bone_crypt", "kind": "swarm", "enemy": "skeletons",
+		"loot_mult": 2.0, "extra": {}, "bounty": 50, "text": "test" }]
+	var cond := Village.conditions("bone_crypt", 1)
+	check(cond["enemy"] == "skeletons" and cond["bounty"] == 50, "conditions reflect the event")
+	check(int(cond["loot"]["bone_dust"][1]) == 6, "swarm doubles the loot")
+	check(AdventurerManager.counter_mult(["blunt"], "weapon", "skeletons") > 1.0, "blunt beats skeletons")
+	check(AdventurerManager.counter_mult(["blade"], "weapon", "skeletons") < 1.0, "skeletons resist blades")
+	check(AdventurerManager.counter_mult(["blade"], "armor", "skeletons") == 1.0, "resist only applies to weapons")
+
+	var adv := AdventurerManager.recruit(2)
+	adv["cls"] = "rogue"
+	adv["gold"] = 500
+	adv["plan"] = "bone_crypt"
+	var mace := GameState.create_item("iron_mace", 1)
+	var p_before := AdventurerManager.power(adv, "skeletons")
+	check(AdventurerManager.wants(adv)["enemy"] == "skeletons", "wants() reports tonight's enemy")
+	var fair := GameState.item_value(mace)
+	check(AdventurerManager.max_price(adv, mace) > int(fair * adv["haggle"]), "counter gear is worth more to them")
+	AdventurerManager.sell_item(adv, mace, fair)
+	check(AdventurerManager.power(adv, "skeletons") > p_before, "mace raises power vs skeletons")
+	var night := AdventurerManager.run_night()
+	check(night["lines"].size() == 1 and "Restless Skeletons" in night["lines"][0], "night report names the enemy")
+
+
+func test_village_activities() -> void:
+	GameState.reset()
+	Village.reset()
+	GameState.day = 3
+	Village.start_day(3)
+	check(Village.merchant_here(3) and not Village.merchant_stock.is_empty(), "merchant visits on day 3 with stock")
+	check(Village.next_merchant_day(4) == 6, "next merchant day")
+	var m: String = Village.merchant_stock.keys()[0]
+	GameState.gold = 1000
+	var had := GameState.material_count(m)
+	check(Village.merchant_buy(m) and GameState.material_count(m) == had + 1, "buy rare material from merchant")
+
+	var wood := GameState.material_count("wood")
+	check(Village.gather("grove") != "", "gather at the grove")
+	check(GameState.material_count("wood") > wood, "gathering adds wood")
+	check(Village.gather("grove") == "", "can't gather twice a day")
+
+	check(Village.buy_round(), "buy a round")
+	check(not Village.buy_round(), "only one round per day")
+	check(Village.visible_days() == 6, "rumors extend the forecast")
+
+	check(not Village.commissions.is_empty(), "a commission is posted")
+	var c: Dictionary = Village.commissions[0]
+	var item := GameState.create_item(c["recipe"], 3)
+	var gold := GameState.gold
+	check(Village.fulfil(c, item), "deliver a commission")
+	check(GameState.gold == gold + int(c["gold"]), "commission pays out")

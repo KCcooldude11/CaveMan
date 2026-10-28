@@ -38,20 +38,27 @@ func _process(delta: float) -> void:
 	if is_paused():
 		return
 	minutes += game_delta(delta)
-	var whole := int(minutes)
-	if whole != _last_emitted:
-		_last_emitted = whole
-		EventBus.time_changed.emit(whole)
+	# Update shop hours first so listeners of time_changed see the right state.
 	if not _shop_open and minutes >= SHOP_OPEN and minutes < SHOP_CLOSE:
 		_shop_open = true
 		EventBus.shop_opened.emit()
 	elif _shop_open and minutes >= SHOP_CLOSE:
 		_shop_open = false
 		EventBus.shop_closed.emit()
+	var whole := int(minutes)
+	if whole != _last_emitted:
+		_last_emitted = whole
+		EventBus.time_changed.emit(whole)
 	if minutes >= DAY_END:
 		running = false
 		EventBus.notify.emit("You collapse from exhaustion...")
 		EventBus.sleep_requested.emit()
+
+
+## Skip time forward (e.g. an hour spent gathering wood).
+func advance(game_minutes: int) -> void:
+	minutes = minf(minutes + game_minutes, DAY_END - 1)
+	EventBus.notify.emit("%d minutes pass..." % game_minutes)
 
 
 func start_day() -> void:

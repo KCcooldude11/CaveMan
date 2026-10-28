@@ -1,0 +1,16 @@
+{
+	"_comment": "Affixes change what an item DOES, not just its numbers. Infusion affixes come from adding one rare material while crafting (effects stay hidden until you try that material). Discovery affixes roll by chance on excellent crafts. power_mult / value_mult scale the item; add_tags give it new counters; the rest are read by the dungeon simulation.",
+
+	"flaming":  { "name": "Flaming",        "infusion": "ember_crystal", "add_tags": ["fire"],   "power_mult": 1.0,  "value_mult": 1.35, "desc": "Wreathed in fire: counts as a FIRE weapon (trolls burn, elementals shrug)." },
+	"silvered": { "name": "Silvered",       "infusion": "silver_ingot",  "add_tags": ["silver"], "power_mult": 1.0,  "value_mult": 1.25, "desc": "Silver-edged: counts as SILVER (skeletons and wraiths fear it)." },
+	"sturdy":   { "name": "Sturdy",         "infusion": "troll_hide",    "unbreakable": true,    "power_mult": 1.1,  "value_mult": 1.3,  "desc": "Never breaks in the dungeon, and a little tougher." },
+	"wardens":  { "name": "Warden's",       "infusion": "bone_dust",     "death_mult": 0.3,      "power_mult": 1.0,  "value_mult": 1.4,  "desc": "Bone-ward runes: the wearer is far less likely to die when things go wrong." },
+	"vampiric": { "name": "Vampiric",       "infusion": "monster_fang",  "success_bonus": 0.08,  "power_mult": 1.0,  "value_mult": 1.3,  "desc": "Drinks from every wound: +8% chance to win each expedition." },
+	"lucky":    { "name": "Lucky",          "infusion": "rough_gem",     "loot_mult": 1.5,       "power_mult": 1.0,  "value_mult": 1.3,  "desc": "Fortune favours the wearer: +50% loot and gold, and more strange discoveries." },
+	"mithril":  { "name": "Mithril-forged", "infusion": "mithril_ore",   "add_tags": ["silver"], "power_mult": 1.35, "value_mult": 1.6,  "desc": "Light as cloth, hard as dragon-scale: +35% power, counts as SILVER." },
+
+	"heroic":   { "name": "Heroic",         "infusion": ["warlord_crown", "alpha_pelt", "bone_crown", "troll_heart", "phoenix_ash", "colossus_core"], "always_legendary": true, "power_mult": 1.5, "value_mult": 2.0, "success_bonus": 0.05, "desc": "Forged around a slain boss's trophy: +50% power and the item is always a named Legend." },
+
+	"keen":     { "name": "Keen",           "discovery": true,           "power_mult": 1.15,     "value_mult": 1.2,  "desc": "A flawless edge: +15% power." },
+	"cursed":   { "name": "Cursed",         "discovery": true,           "power_mult": 1.4,      "death_mult": 2.0,  "value_mult": 0.85, "desc": "Something whispers in the steel: +40% power, but the wielder is twice as likely to die. Reckless heroes love it; cautious ones won't touch it." }
+}

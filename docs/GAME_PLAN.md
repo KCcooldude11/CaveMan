@@ -60,7 +60,8 @@ Work in **small vertical slices**. Each phase ends with something playable. Don'
 - Automated logic tests + a 30-day economy simulation
 
 ### Minigame design notes
-- **Forge / Workbench: timing bar.** Three hammer strikes, each scored on how close it lands to the gold zone's center.
+- **Forge: first-person anvil.** The camera drops over the anvil and a pixel hand swings the hammer with the mouse. Each strike has a glowing target on the hot metal and a ring closing on it; position *and* timing both count (perfect / good / miss). Sparks, screen shake and anvil clangs give feedback. Harder recipes close the rings faster and need more strikes; station level and mastery enlarge the targets. Code: `scripts/world/forge_session.gd`.
+- **Workbench: timing bar.** Three strikes, each scored on how close it lands to the gold zone's center.
 - **Jeweler: gem-setting dial**, inspired by the *Starcatcher* Minecraft fishing mod. A needle sweeps around a ring. Hit the glowing slots to raise a progress bar that slowly drains, and misses cost progress. Each slot jumps elsewhere when hit. Slot types:
   - *thin*: worth more
   - *flip*: reverses the needle
@@ -70,6 +71,46 @@ Work in **small vertical slices**. Each phase ends with something playable. Don'
 
   Harder recipes get faster needles and nastier slots, and bench upgrades widen the slots. Everything is tunable in `data/dial_minigame.json`.
 - Idea for later: give each station its own minigame (e.g. a bellows rhythm game for the forge), and let rare materials add their own special slots, the way Starcatcher gives each fish its own.
+
+### Phase 0.5: Village & forecast ✅
+- **Dungeon forecast** (notice board): each day 1–2 events (*swarm*: double loot plus a bounty; *invasion*: a different enemy moves in; *vein*: extra rare material). You can see 3 days ahead, or 6 with tavern rumors.
+- **Enemies with weaknesses and resistances** (`data/enemies.json`). Gear that exploits a weakness gets +30% power, and a resisted weapon gets -30%. Heroes plan their dungeon each morning, tell you at the counter, and pay more for the right counter.
+- **Commissions** from villagers, often asking for counters to an upcoming threat.
+- **Points of interest**: the tavern (rumors, where heroes are heading), Zara's wagon (rare materials every 3rd day), the old mine and the woodcutter's grove (free daily gathering).
+
+This turns "craft whatever is cheapest" into planning a few days ahead: *"Skeletons swarm the crypt in two days, so I'll forge maces now and buy the bone dust they bring back to make Bone Wards."*
+
+### Phase 0.75: The living village ✅
+The goal of this phase is **emergent stories**: the systems below feed each other, so the game produces situations nobody scripted.
+
+**How the pieces connect**
+```
+ dungeon THREAT --(ignored)--> BOSS --(still ignored)--> RAID on the village
+     ^   |                       |                          |
+ heroes win/lose            party of heroes            prosperity/safety drop
+     |   v                  (2-night hunt)                  |
+ FORECAST (rumors!) ----> what heroes need -----> your CRAFTING (counters,
+     |                                             infusions, legends)
+     v                                                   |
+ LOOT into town --> MARKET prices <-- your buying        v
+     |                                      HEROES: loyalty, memories,
+     v                                      titles, rivals, injuries
+ rare materials --> INFUSIONS / PROJECTS          |
+                                                  v
+        HAPPENINGS read all of the above --> morning DECISIONS
+```
+
+| System | What it does | Where |
+|---|---|---|
+| Heroes | Personality (reckless/cautious/greedy/glory/steady), loyalty, memories, titles ("Skeleton-Bane", "the Unbroken", "Bearer of Gravecleaver"), rivals, injuries, close calls that change personality, patrons who gift materials | `adventurer_manager.gd`, `data/heroes.json` |
+| Crafting depth | Infusions -> affixes, Keen/Cursed discoveries, mastery per family (wider sweet spots, +power), blueprints, Legends with histories that can be lost and recovered | `game_state.gd`, `data/affixes.json` |
+| Dungeons | Threat, faction takeover and liberation, modifiers (Darkness, Cursed Halls, Unstable, Poison Air, Reinforcements), bosses with party expeditions, trophies and blueprints, raids | `dungeons.gd`, `data/world.json` |
+| Economy | Supply-and-demand prices, shortages, buyer saturation (no craft-and-dump profit), threat-driven demand, a rival smith, merchant purses, caravans, hero spending | `market.gd`, `village.gd` |
+| Village | Prosperity and safety; five restoration projects that change rules and appear in the world | `village.gd`, `data/world.json` |
+| Happenings | 12 state-driven events, most of them decisions with trade-offs | `happenings.gd`, `data/happenings.json` |
+| Chronicle | Day-stamped history and the Hall of Legends | `chronicle.gd` |
+
+**Balance targets** (from `tests/systems_test.gd`'s 60-day bot, which sells everything at the highest price heroes will pay): about 40 renown by day 20, about 100 by day 40, Legendary (150) around day 55–60. Gold in the low thousands to ~15k, with sinks in projects, upgrades and caravans. Usually 1–2 bosses slain, and all 5 projects done by about day 40.
 
 ### Phase 1: Make the loop *feel* good (2–4 weeks)
 **Goal: you want to play "one more day" with grey boxes.**
@@ -172,15 +213,21 @@ The current sprites and textures are **programmer art** generated by `tools/gen_
 | Where | Knob | Effect |
 |---|---|---|
 | `data/recipes.json` | `power`, `value`, `renown`, `inputs` | Item strength, price, unlock point, cost |
-| `data/dungeons.json` | `difficulty`, `gold`, `loot`, `renown` | How hard / rewarding each dungeon is |
+| `data/dungeons.json` | `difficulty`, `gold`, `enemy`, `renown` | How hard / rewarding each dungeon is |
+| `data/enemies.json` | `weak`, `resist`, `loot` | Which gear counters what, and what heroes bring back |
+| `data/village.json` | forecast kinds/weights, commissions, merchant, tavern, gathering | Village activities and how often things happen |
 | `data/renown_tiers.json` | `min`, `visitors`, `max_level` | Pace of fame, daily customers, hero levels |
 | `data/upgrades.json` | `costs`, `renown` | Upgrade prices and gates |
 | `time_manager.gd` | `minutes_per_second`, `PAUSE_IN_MENUS` | Day length; whether menus freeze time |
 | `adventurer_manager.gd` | `RENOWN_PER_WIN`, `FIRST_CLEAR_BONUS`, death/break chances in `_run()` | Progression speed and risk |
-| `forge_minigame.gd` | `configure()` | Forge/Workbench timing-bar difficulty |
+| `forge_session.gd` | `setup()`, `strike_score()`, `quality_for()` | First-person anvil difficulty |
+| `forge_minigame.gd` | `configure()` | Workbench timing-bar difficulty |
+| `data/world.json` | threat, bosses, modifiers, projects, market, rival, caravan | The living world's pacing |
+| `data/affixes.json`, `data/heroes.json`, `data/happenings.json` | affix effects, personalities and loyalty, event cooldowns and rewards | Crafting depth, heroes, events |
+| `adventurer_manager.gd` | `RENOWN_PER_WIN`; `simulation.gd` taper | Renown pace |
 | `data/dial_minigame.json` | `difficulties` (hp, speed, penalty, decay, slots), `spot_types` | Jeweler's gem-setting dial (Starcatcher-style) |
 | `craft_menu.gd` | `STATION_MINIGAMES` | Which minigame each station uses |
 | `game_state.gd` | `START_GOLD`, starting materials in `reset()` | Opening minutes |
 
 `tests/test_runner.gd` runs a 30-day bot simulation and prints gold and renown every 5 days. Re-run it after balance changes to see the progression curve.
-Current curve: ~10 renown by day 5, ~30 by day 15, ~50–100 by day 30.
+Current curve for a bot that ignores the forecast and commissions: ~10 renown by day 5, ~25 by day 15, ~50–80 by day 30. A player who uses counters and commissions should land higher.

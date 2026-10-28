@@ -1,0 +1,51 @@
+{
+	"_comment": "Village life: dungeon forecast events, commissions on the notice board, the travelling merchant and free gathering spots.",
+
+	"forecast": {
+		"days_ahead": 3,
+		"rumor_days_ahead": 6,
+		"events_per_day": [1, 2],
+		"kinds": {
+			"swarm":    { "weight": 4, "loot_mult": 2.0, "bounty": [30, 90],  "text": "{enemy} are swarming the {dungeon}! Bounty posted." },
+			"invasion": { "weight": 3, "loot_mult": 1.0, "bounty": [20, 60],  "text": "{enemy} have moved into the {dungeon}." },
+			"vein":     { "weight": 2, "loot_mult": 1.0, "bounty": [0, 0],    "text": "Explorers found a rich vein of {extra} in the {dungeon}." }
+		},
+		"vein_materials": ["rough_gem", "silver_ingot", "iron_ingot"]
+	},
+
+	"commissions": {
+		"max_active": 2,
+		"new_chance": 0.6,
+		"due_days": [3, 5],
+		"gold_mult": 1.6,
+		"renown": [1, 2],
+		"givers": [
+			"Captain Holt of the Town Guard",
+			"Mayor Brindle",
+			"Sister Agna of the Chapel",
+			"Old Fenwick the Hunter",
+			"Lady Corva's Steward",
+			"The Adventurers' Guild"
+		]
+	},
+
+	"merchant": {
+		"name": "Zara the Wanderer",
+		"every_days": 3,
+		"price_mult": 1.6,
+		"buy_rate": 0.6,
+		"stock_kinds": [2, 3],
+		"stock_count": [2, 4]
+	},
+
+	"tavern": {
+		"name": "The Rusty Tankard",
+		"round_cost": 15,
+		"renown_chance": 0.35
+	},
+
+	"gathering": {
+		"mine":  { "name": "Old Mine",           "minutes": 60, "yield": { "iron_ingot": [1, 2] }, "bonus": { "rough_gem": 0.15, "silver_ingot": 0.1 } },
+		"grove": { "name": "Woodcutter's Grove", "minutes": 45, "yield": { "wood": [2, 4] },       "bonus": { "leather": 0.2 } }
+	}
+}

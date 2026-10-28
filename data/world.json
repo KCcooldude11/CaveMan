@@ -1,0 +1,50 @@
+{
+	"_comment": "Persistent dungeon state, bosses, forecast modifiers, village prosperity, projects, market and the rival smith.",
+
+	"threat": {
+		"start": 25, "per_win": -7, "per_loss": 3, "ignored_per_night": 4, "swarm_bonus": 8,
+		"boss_at": 70, "raid_at": 100, "after_raid": 60, "takeover_at": 50, "liberated_below": 20,
+		"difficulty_min": 0.8, "difficulty_per_threat": 0.004
+	},
+
+	"bosses": {
+		"goblins":    { "name": "Grukk the Warlord",        "trophy": "warlord_crown", "blueprint": "goblin_brigandine" },
+		"wolves":     { "name": "the Pale Alpha",           "trophy": "alpha_pelt",    "blueprint": "goblin_brigandine" },
+		"skeletons":  { "name": "the Bone King",            "trophy": "bone_crown",    "blueprint": "wraithward_lantern" },
+		"wraiths":    { "name": "the Weeping Lady",         "trophy": "bone_crown",    "blueprint": "wraithward_lantern" },
+		"trolls":     { "name": "Moss-Mother Hagga",        "trophy": "troll_heart",   "blueprint": "trollbane_greataxe" },
+		"elementals": { "name": "the Cinder Tyrant",        "trophy": "phoenix_ash",   "blueprint": "phoenix_bow" },
+		"golems":     { "name": "the Mithril Colossus",     "trophy": "colossus_core", "blueprint": "golemheart_maul" }
+	},
+	"boss": { "difficulty_mult": 1.8, "party_size": 3, "expedition_nights": 2, "bounty": 250, "renown": 12, "prosperity": 12 },
+
+	"modifiers": {
+		"darkness":      { "name": "Darkness",       "chance": 0.25, "tags": { "fire": 1.2, "bow": 0.8 },     "desc": "Pitch-black halls: torches (fire) help, arrows miss." },
+		"cursed_halls":  { "name": "Cursed Halls",   "chance": 0.15, "tags": { "silver": 1.25 }, "curse_risk": 2.0, "desc": "Old curses wake: silver shines, cursed gear turns on its owner." },
+		"unstable":      { "name": "Unstable Tunnels","chance": 0.2, "tags": { "heavy": 0.85 }, "break_mult": 2.5, "desc": "Cave-ins! Heavy gear is a burden and things break (Sturdy gear won't)." },
+		"poison_air":    { "name": "Poison Air",     "chance": 0.15, "armor_mult": 1.3,               "desc": "Choking fumes: good armor counts for more." },
+		"reinforcements":{ "name": "Reinforcements", "chance": 0.15, "difficulty_mult": 1.25,          "desc": "More of them than expected." }
+	},
+	"forecast_rumor_reroll": 0.3,
+
+	"village": { "prosperity": 30, "safety": 50, "prosperity_per_boss": 12, "raid_power_per_threat": 1.6 },
+
+	"projects": {
+		"watchtower": { "name": "Old Watchtower", "gold": 300, "materials": { "wood": 10, "iron_ingot": 5 },  "prosperity": 0,  "desc": "Guards spot trouble early: +25 safety, stronger raid defense, see dungeon threat levels and 1 more forecast day." },
+		"chapel":     { "name": "Healer's Chapel", "gold": 400, "materials": { "silver_ingot": 3, "wood": 6 }, "prosperity": 20, "desc": "Wounded heroes recover overnight and fewer heroes die (-25% death chance)." },
+		"market":     { "name": "Market Hall",    "gold": 500, "materials": { "wood": 12, "iron_ingot": 6 }, "prosperity": 30, "desc": "Zara visits every 2 days with a fuller purse, prices settle faster, +10 prosperity." },
+		"guildhall":  { "name": "Guild Hall",     "gold": 700, "materials": { "leather": 8, "rough_gem": 2 }, "prosperity": 45, "desc": "+2 heroes visit each day, stronger heroes come to town, boss parties of 4." },
+		"deepmine":   { "name": "Deep Mine Shaft","gold": 450, "materials": { "wood": 8, "iron_ingot": 4 },  "prosperity": 25, "desc": "The old mine yields more iron and sometimes silver or mithril." }
+	},
+
+	"market": {
+		"buy_impact": 0.035, "loot_impact": 0.05, "recover": 0.15, "min_mult": 0.6, "max_mult": 2.5,
+		"sale_saturation": 0.15, "saturation_recover": 0.3,
+		"demand_threat_bonus": 0.2, "demand_per_recent_sale": 0.05, "demand_floor": -0.3,
+		"wholesale_cost_cap": 0.9, "merchant_purse": 250
+	},
+
+	"rival": { "name": "Brannoc Ironhand", "shop": "Brannoc's Smithy", "start_rep": 20, "steal_chance": 0.35, "power_per_rep": 0.12, "leaves_below": 5 },
+
+	"caravan": { "min": 50, "max": 400, "nights": 3, "base_return": [0.2, 2.4], "safety_weight": 0.006 }
+}

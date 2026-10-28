@@ -1,7 +1,7 @@
 [
-	{ "id": "goblin_warrens", "name": "Goblin Warrens", "difficulty": 12,  "xp": 6,  "renown": 2,  "gold": [10, 30],   "loot": { "monster_fang": [1, 3] } },
-	{ "id": "bone_crypt",     "name": "Crypt of Bones", "difficulty": 26,  "xp": 12, "renown": 4,  "gold": [25, 60],   "loot": { "bone_dust": [1, 3], "monster_fang": [0, 2] } },
-	{ "id": "troll_fens",     "name": "Troll Fens",     "difficulty": 45,  "xp": 20, "renown": 7,  "gold": [50, 110],  "loot": { "troll_hide": [1, 2] } },
-	{ "id": "ember_depths",   "name": "Ember Depths",   "difficulty": 70,  "xp": 32, "renown": 12, "gold": [90, 200],  "loot": { "ember_crystal": [1, 2], "bone_dust": [0, 2] } },
-	{ "id": "mithril_deep",   "name": "Mithril Deep",   "difficulty": 105, "xp": 50, "renown": 20, "gold": [160, 350], "loot": { "mithril_ore": [1, 3] } }
+	{ "id": "goblin_warrens", "name": "Goblin Warrens", "enemy": "goblins",    "difficulty": 12,  "xp": 6,  "renown": 2,  "gold": [10, 30] },
+	{ "id": "bone_crypt",     "name": "Crypt of Bones", "enemy": "skeletons",  "difficulty": 26,  "xp": 12, "renown": 4,  "gold": [25, 60] },
+	{ "id": "troll_fens",     "name": "Troll Fens",     "enemy": "trolls",     "difficulty": 45,  "xp": 20, "renown": 7,  "gold": [50, 110] },
+	{ "id": "ember_depths",   "name": "Ember Depths",   "enemy": "elementals", "difficulty": 70,  "xp": 32, "renown": 12, "gold": [90, 200] },
+	{ "id": "mithril_deep",   "name": "Mithril Deep",   "enemy": "golems",     "difficulty": 105, "xp": 50, "renown": 20, "gold": [160, 350] }
 ]

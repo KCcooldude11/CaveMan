@@ -1,0 +1,11 @@
+{
+	"_comment": "Who lives in the dungeons. Gear with a 'weak' tag hits harder (+30% of its power); weapons with a 'resist' tag hit softer (-30%). Loot is what adventurers bring back after beating them.",
+
+	"goblins":    { "name": "Goblin Horde",        "weak": ["blade", "bow"],           "resist": [],                        "loot": { "monster_fang": [1, 3] },                     "desc": "Fast and numerous. Quick blades and arrows cut them down." },
+	"wolves":     { "name": "Dire Wolves",         "weak": ["bow", "beast"],           "resist": ["staff"],                 "loot": { "monster_fang": [2, 4], "leather": [1, 2] },  "desc": "Hunt in packs. Keep them at range; beast charms calm them." },
+	"skeletons":  { "name": "Restless Skeletons",  "weak": ["blunt", "silver"],        "resist": ["blade", "bow"],          "loot": { "bone_dust": [1, 3] },                        "desc": "Arrows and edges pass between their ribs. Smash them or use silver." },
+	"wraiths":    { "name": "Wailing Wraiths",     "weak": ["silver", "magic"],        "resist": ["blade", "axe", "blunt"], "loot": { "bone_dust": [1, 2], "rough_gem": [0, 1] },   "desc": "Spirits. Only silver and magic truly touch them." },
+	"trolls":     { "name": "Fen Trolls",          "weak": ["fire", "axe"],            "resist": ["blade"],                 "loot": { "troll_hide": [1, 2] },                       "desc": "Their wounds close unless burned. Axes chop through the hide." },
+	"elementals": { "name": "Ember Elementals",    "weak": ["magic", "fireward"],      "resist": ["fire", "bow"],           "loot": { "ember_crystal": [1, 2] },                    "desc": "Living flame. Fire-warding charms keep heroes alive; magic unbinds them." },
+	"golems":     { "name": "Mithril Golems",      "weak": ["blunt", "magic"],         "resist": ["blade", "bow"],          "loot": { "mithril_ore": [1, 3] },                      "desc": "Walking ore. Crush them with hammers and maces, or dispel them." }
+}

@@ -1,0 +1,30 @@
+{
+	"_comment": "Hero personalities shape how they pick dungeons, what they buy and how they change after close calls. boldness shifts the minimum success chance they accept (negative = braver).",
+
+	"personalities": {
+		"reckless": { "name": "Reckless", "boldness": -0.15, "press_on": 0.6, "haggle": 0.05,  "loves_cursed": true,  "desc": "Charges into the deepest halls. Loves cursed steel." },
+		"cautious": { "name": "Cautious", "boldness": 0.12,  "press_on": 0.15, "haggle": -0.05, "hates_cursed": true, "prefers_slot": "armor", "desc": "Picks safe fights, values armor, never touches cursed gear." },
+		"greedy":   { "name": "Greedy",   "boldness": -0.05, "press_on": 0.5,  "haggle": -0.12, "desc": "Haggles hard and always goes back for more treasure." },
+		"glory":    { "name": "Glory-Seeker", "boldness": -0.1, "press_on": 0.35, "haggle": 0.1, "loves_bounty": true, "desc": "Chases bounties and bosses; pays extra to look the part." },
+		"steady":   { "name": "Steady",   "boldness": 0.0,   "press_on": 0.3,  "haggle": 0.0,   "desc": "Reliable and loyal once won over." }
+	},
+
+	"loyalty": {
+		"sale": 6, "counter_win": 8, "gift": 35, "turned_away": -6, "gear_failed": -10,
+		"regular": 40, "patron": 75
+	},
+
+	"titles": {
+		"kills_for_bane": 6,
+		"bane": "{enemy}-Bane",
+		"boss": "{boss}-Slayer",
+		"survivor": "the Unbroken",
+		"legend_bearer": "Bearer of {legend}"
+	},
+
+	"legendary_heroes": [
+		{ "name": "Seraphine Dawnblade", "cls": "warrior", "level": 12, "personality": "glory" },
+		{ "name": "Old Ketch the Unkillable", "cls": "rogue", "level": 11, "personality": "cautious" },
+		{ "name": "Ysmay of the Seven Stars", "cls": "mage", "level": 13, "personality": "reckless" }
+	]
+}

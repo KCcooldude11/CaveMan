@@ -86,6 +86,22 @@ CHARACTERS = {
     "rogue": dict(skin=hexc("e0b090"), hair=hexc("2a2030"), hair_style="short", head="hood", hood=hexc("4a3560"),
                   mask=hexc("2a2030"), torso=hexc("6b4f86"), legs=hexc("2e2638"), boots=hexc("1e1828"),
                   belt=hexc("3a2a20"), weapon="dagger"),
+    # Villagers
+    "barkeep": dict(skin=hexc("e8b483"), hair=hexc("8a3b1f"), hair_style="short", beard=hexc("b5542a"),
+                    torso=hexc("8a5a2e"), legs=hexc("3a2a20"), boots=hexc("2a1e18"),
+                    apron=hexc("efe8d8"), weapon="none"),
+    "merchant": dict(skin=hexc("c98a5a"), hair=hexc("2a2030"), hair_style="short", head="hood", hood=hexc("e08a2e"),
+                     torso=hexc("7a3e8a"), legs=hexc("7a3e8a"), boots=hexc("3a2a20"), robe=True,
+                     trim=hexc("ffd27a"), belt=hexc("ffd27a"), weapon="none"),
+    "mayor": dict(skin=SKIN, hair=hexc("9a9aa8"), hair_style="short", beard=hexc("9a9aa8"),
+                  torso=hexc("6b2f3a"), legs=hexc("3a2a30"), boots=hexc("2a1e18"),
+                  belt=hexc("ffd27a"), weapon="none"),
+    "rival": dict(skin=hexc("e0a878"), hair=hexc("2a2a2a"), hair_style="short", beard=hexc("2a2a2a"),
+                  torso=hexc("4a4a52"), legs=hexc("2a2a30"), boots=hexc("1e1828"),
+                  apron=hexc("3a2a20"), weapon="hammer"),
+    "guard": dict(skin=SKIN, hair=hexc("4a3020"), hair_style="short", head="helmet", metal=hexc("9aa3ad"),
+                  torso=hexc("3e5a9a"), legs=hexc("3a3040"), boots=hexc("2a1e18"),
+                  plate=hexc("8f98a3"), weapon="sword"),
 }
 
 # Frame -> (upper body bob, left leg lift, right leg lift, arm swing)
@@ -401,6 +417,58 @@ def iron(x, y, r):
     return shade(hexc("4f4c48"), r.uniform(0.85, 1.1))
 
 
+# --- First-person hammer hand ------------------------------------------------------
+
+def make_hammer_hand():
+    """64x64 first-person hand gripping a smithing hammer. The hammer's striking
+    face is at the top-left (hotspot ~ (12, 13)); the fist is near (40, 42),
+    which is where the game pivots the swing."""
+    import math
+    cv = Canvas(64, 64)
+    skin, skin_d = hexc("f2c08a"), hexc("d39a66")
+    sleeve, sleeve_d = hexc("e8e2d0"), hexc("b8b0a0")
+    wood, wood_d = hexc("8a5a2e"), hexc("6b4423")
+    iron, iron_l, iron_d = hexc("8a8f99"), hexc("c4c9d1"), hexc("5a5f69")
+    ax = (1 / math.sqrt(2), 1 / math.sqrt(2))     # along the handle (toward the fist)
+    pp = (1 / math.sqrt(2), -1 / math.sqrt(2))    # across the handle
+
+    def along(x, y, ox, oy):
+        dx, dy = x + 0.5 - ox, y + 0.5 - oy
+        return dx * ax[0] + dy * ax[1], dx * pp[0] + dy * pp[1]
+
+    for y in range(64):
+        for x in range(64):
+            # Sleeve and forearm toward the bottom-right corner.
+            u, v = along(x, y, 44, 46)
+            if u > 0 and abs(v) <= 6.5:
+                cv.dot(x, y, skin if u < 5 else (sleeve if v < 2.5 else sleeve_d))
+            # Handle.
+            u, v = along(x, y, 16, 18)
+            if -1 <= u <= 34 and abs(v) <= 1.7:
+                cv.dot(x, y, wood if v < 0.5 else wood_d)
+            # Fist.
+            dx, dy = x + 0.5 - 41, y + 0.5 - 43
+            if dx * dx + dy * dy <= 46:
+                cv.dot(x, y, skin if dx + dy < 3 else skin_d)
+            # Hammer head across the top of the handle.
+            u, v = along(x, y, 15, 17)
+            if abs(u) <= 6 and abs(v) <= 13:
+                col = iron
+                if u <= -4:
+                    col = iron_l
+                elif u >= 4:
+                    col = iron_d
+                if v <= -11:
+                    col = iron_l     # striking face (top-left end)
+                elif v >= 11:
+                    col = iron_d
+                cv.dot(x, y, col)
+    for k in range(3):  # knuckles
+        cv.dot(37 + k * 2, 40 + k, skin_d)
+    cv.outline()
+    cv.img.save(os.path.join(SPRITES, "hammer_hand.png"))
+
+
 def main():
     os.makedirs(SPRITES, exist_ok=True)
     os.makedirs(TEXTURES, exist_ok=True)
@@ -408,6 +476,7 @@ def main():
         make_sheet(name, spec)
     make_tree()
     make_bush()
+    make_hammer_hand()
     tex("wood_floor", wood_floor(), 1)
     tex("plaster", plaster, 2)
     tex("stone", stone, 3)
